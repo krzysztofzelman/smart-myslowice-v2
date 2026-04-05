@@ -1,0 +1,93 @@
+/* ── Reset ──────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Motyw: CIEMNY (noc) — domyślny ────────────────────────────────────── */
+:root, [data-theme="dark"] {
+  --c-bg:        #0c0e14;
+  --c-surface:   #12151e;
+  --c-surface2:  #1a1e2c;
+  --c-border:    rgba(255,255,255,0.07);
+  --c-text:      #e8eaf0;
+  --c-muted:     #6b7280;
+  --c-red:       #ff3b4e;
+  --c-amber:     #f59e0b;
+  --c-green:     #22d3a5;
+  --c-blue:      #3b82f6;
+  --c-indigo:    #6366f1;
+  --radius:      14px;
+  --shadow-lg:   0 24px 48px rgba(0,0,0,0.5);
+}
+
+/* ── Motyw: ZMIERZCH / ŚWIT ─────────────────────────────────────────────── */
+[data-theme="dusk"] {
+  --c-bg:        #1c1410;
+  --c-surface:   #261c14;
+  --c-surface2:  #32231a;
+  --c-border:    rgba(255,200,120,0.1);
+  --c-text:      #f0e6d6;
+  --c-muted:     #9a8070;
+  --c-red:       #ff5c4e;
+  --c-amber:     #f5a623;
+  --c-green:     #34d399;
+  --c-blue:      #60a5fa;
+  --c-indigo:    #a78bfa;
+  --shadow-lg:   0 24px 48px rgba(0,0,0,0.6);
+}
+
+/* ── Motyw: DZIENNY ─────────────────────────────────────────────────────── */
+[data-theme="light"] {
+  --c-bg:        #f4f6f9;
+  --c-surface:   #ffffff;
+  --c-surface2:  #eef1f6;
+  --c-border:    rgba(0,0,0,0.08);
+  --c-text:      #1a1f2e;
+  --c-muted:     #64748b;
+  --c-red:       #e03045;
+  --c-amber:     #d97706;
+  --c-green:     #059669;
+  --c-blue:      #2563eb;
+  --c-indigo:    #4f46e5;
+  --shadow-lg:   0 24px 48px rgba(0,0,0,0.1);
+}
+
+/* ── Płynne przejście między motywami ───────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+  transition:
+    background-color 2s ease,
+    color 2s ease;
+}
+
+body {
+  font-family: 'Space Grotesk', sans-serif;
+  background: var(--c-bg);
+  color: var(--c-text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 2s ease, color 2s ease;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--c-bg); }
+::-webkit-scrollbar-thumb { background: var(--c-surface2); border-radius: 99px; }
+
+/* ── Leaflet popup override ─────────────────────────────────────────────── */
+.leaflet-popup-content-wrapper {
+  background: var(--c-surface2) !important;
+  color: var(--c-text) !important;
+  border: 1px solid var(--c-border) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+.leaflet-popup-tip { background: var(--c-surface2) !important; }
+.leaflet-popup-close-button { color: var(--c-muted) !important; }
+
+/* ── Globalna tranzycja tokenów kolorów ─────────────────────────────────── */
+*, *::before, *::after {
+  transition:
+    background-color 2s ease,
+    border-color     2s ease,
+    color            1s ease,
+    box-shadow       2s ease;
+}

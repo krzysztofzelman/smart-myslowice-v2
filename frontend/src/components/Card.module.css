@@ -1,0 +1,14 @@
+.card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-top: 2px solid transparent;
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  border-color: rgba(255,255,255,0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+}
