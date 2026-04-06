@@ -99,7 +99,7 @@ app.get('/api/air', (_req, res) => res.json(airSensors));
 
 app.get('/api/weather', async (_req, res) => {
   try {
-    const apiKey = '7675506ab56dd4420aa2c0011d8b6858';
+    const apiKey = '1b6db0a1cc42618ee12db361f0ce8599';
     const url = `https://api.openweathermap.org/data/2.5/weather?q=Myslowice&units=metric&lang=pl&appid=${apiKey}`;
     const response = await fetch(url);
     if (!response.ok) throw new Error(`OWM error ${response.status}`);
