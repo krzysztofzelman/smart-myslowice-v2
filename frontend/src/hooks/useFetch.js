@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export function useFetch(url, options = {}) {
+export function useFetch(url) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -10,7 +10,7 @@ export function useFetch(url, options = {}) {
     setLoading(true);
     setError(null);
 
-    fetch(`https://smart-myslowice-v2.onrender.com${url}`)
+    fetch(url)
       .then(r => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
