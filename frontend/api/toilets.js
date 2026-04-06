@@ -20,6 +20,41 @@ const toilets = [
     access: "Godz. otwarcia",
     paid: false,
   },
+  {
+    id: 4,
+    name: "Toaleta – Kaufland",
+    address: "ul. Fryderyka Chopina 1, 41-400 Mysłowice",
+    access: "Pon–Sob 6:00–22:00, Nd 8:00–20:00",
+    paid: false,
+  },
+  {
+    id: 5,
+    name: "Toaleta – Stacja BP Magnolia",
+    address: "ul. Katowicka, 41-400 Mysłowice",
+    access: "24/7",
+    paid: false,
+  },
+  {
+    id: 6,
+    name: "Toaleta – Stacja Orlen",
+    address: "ul. Oświęcimska 50, 41-400 Mysłowice",
+    access: "24/7",
+    paid: false,
+  },
+  {
+    id: 7,
+    name: "Toaleta – Stacja Shell",
+    address: "ul. Katowicka 45, 41-400 Mysłowice",
+    access: "24/7",
+    paid: false,
+  },
+  {
+    id: 8,
+    name: "Toaleta – Stacja Orlen",
+    address: "ul. Katowicka, 41-400 Mysłowice",
+    access: "24/7",
+    paid: false,
+  },
 ];
 
 export default function handler(req, res) {
