@@ -10,7 +10,7 @@ export function useFetch(url, options = {}) {
     setLoading(true);
     setError(null);
 
-    fetch(url)
+    fetch(`https://smart-myslowice-v2.onrender.com${url}`)
       .then(r => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
