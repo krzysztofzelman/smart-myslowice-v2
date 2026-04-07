@@ -6,7 +6,6 @@ import Card from '../components/Card.jsx';
 import Badge from '../components/Badge.jsx';
 import styles from './AedPage.module.css';
 
-// Fix default icon
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -28,15 +27,53 @@ function FlyTo({ coords }) {
   return null;
 }
 
+function ThemedTileLayer() {
+  const theme = document.documentElement.getAttribute('data-theme');
+  const isDark = theme === 'dark' || theme === 'dusk';
+
+  if (isDark) {
+    return (
+      <TileLayer
+        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+        maxZoom={19}
+      />
+    );
+  }
+  return (
+    <TileLayer
+      url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+      attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+      maxZoom={19}
+    />
+  );
+}
+
 export default function AedPage() {
   const { data: locations, loading } = useFetch('/api/aed');
   const [flyTo, setFlyTo] = useState(null);
+  const [theme, setTheme] = useState(
+    document.documentElement.getAttribute('data-theme') || 'dark'
+  );
+
+  // Nasłuchuj zmian motywu
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setTheme(document.documentElement.getAttribute('data-theme') || 'dark');
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
+  }, []);
+
+  const isDark = theme === 'dark' || theme === 'dusk';
+  const tileUrl = isDark
+    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
 
   const is247 = access => access.includes('24/7');
 
   return (
     <div className={styles.page}>
-      {/* Alert banner */}
       <div className={styles.alert}>
         <div className={styles.alertLeft}>
           <span className={styles.alertIcon}>⚠️</span>
@@ -48,7 +85,6 @@ export default function AedPage() {
         <a href="tel:112" className={styles.alertBtn}>Zadzwoń 112</a>
       </div>
 
-      {/* Stats */}
       <div className={styles.statsRow}>
         <Card accent="var(--c-red)">
           <p className={styles.statNum}>{loading ? '…' : locations?.length}</p>
@@ -64,15 +100,15 @@ export default function AedPage() {
         </Card>
       </div>
 
-      {/* Map */}
       <div className={styles.mapWrap}>
         <MapContainer
           center={[50.2406, 19.1378]}
           zoom={14}
-          style={{ height: '100%', width: '100%', background: '#12151e' }}
+          style={{ height: '100%', width: '100%' }}
         >
           <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            key={tileUrl}
+            url={tileUrl}
             attribution='&copy; <a href="https://carto.com/">CARTO</a>'
             maxZoom={19}
           />
@@ -99,7 +135,6 @@ export default function AedPage() {
         </MapContainer>
       </div>
 
-      {/* List */}
       <div className={styles.listWrap}>
         <h2 className={styles.listTitle}>Wszystkie lokalizacje</h2>
         <div className={styles.list}>
