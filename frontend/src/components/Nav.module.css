@@ -2,9 +2,10 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(18, 21, 30, 0.85);
+  background: var(--c-surface);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--c-border);
+  transition: background-color 2s ease, border-color 2s ease;
 }
 
 .inner {
@@ -40,7 +41,7 @@
 
 .tab:hover {
   color: var(--c-text);
-  background: rgba(255,255,255,0.04);
+  background: rgba(128,128,128,0.08);
 }
 
 .active {
