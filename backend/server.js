@@ -66,6 +66,62 @@ const aedLocations = [
     access: "24/7",
     description: "Defibrylator przy Izbie Przyjęć i SOR",
   },
+  {
+    id: 8,
+    name: "OSP Janów",
+    address: "ul. Bolesława Chrobrego 11, 41-406 Mysłowice",
+    coordinates: { lat: 50.2396024, lng: 19.1145707 },
+    access: "24/7",
+    description: "Na zewnątrz budynku OSP Janów",
+  },
+  {
+    id: 9,
+    name: "Bank ING",
+    address: "ul. Powstańców 1, 41-400 Mysłowice",
+    coordinates: { lat: 50.242107, lng: 19.1418073 },
+    access: "Brak danych",
+    description: "Na wyposażeniu banku ING",
+  },
+  {
+    id: 10,
+    name: "OSP Kosztowy",
+    address: "ul. Górnicza, Mysłowice-Kosztowy",
+    coordinates: { lat: 50.1889724, lng: 19.151563 },
+    access: "24/7",
+    description: "Na zewnętrznej ścianie remizy, zielona kapsuła Rotaid",
+  },
+  {
+    id: 11,
+    name: "Przedszkole nr 6",
+    address: "Mysłowice",
+    coordinates: { lat: 50.2157209, lng: 19.1569921 },
+    access: "24/7",
+    description: "Kapsuła przy wejściu frontowym budynku",
+  },
+  {
+    id: 12,
+    name: "PSP Mysłowice – mobilny AED",
+    address: "Mysłowice",
+    coordinates: { lat: 50.2337007, lng: 19.1188436 },
+    access: "24/7",
+    description: "Mobilny AED na samochodzie ratowniczym PSP",
+  },
+  {
+    id: 13,
+    name: "Lodowisko / Boiska siatkówki",
+    address: "Mysłowice",
+    coordinates: { lat: 50.2261356, lng: 19.1441696 },
+    access: "Pon–Sob 9:00–20:00",
+    description: "Na drewnianym domku, po lewej stronie od wejścia",
+  },
+  {
+    id: 14,
+    name: "Przychodnia Bracka – Unia Bracka",
+    address: "Mysłowice",
+    coordinates: { lat: 50.1878307, lng: 19.1046811 },
+    access: "W godzinach otwarcia",
+    description: "W Przychodni Brackiej, gabinet nr 3",
+  },
 ];
 
 // ── Static data ───────────────────────────────────────────────────────────────
@@ -124,56 +180,180 @@ const ecoPoints = [
   },
 ];
 
-const airSensors = [
-  {
-    id: 1,
-    name: "MOSiR – Bończyka",
-    address: "ul. Bończyka 32z",
-    pm25: 18,
-    quality: "good",
-  },
-  {
-    id: 2,
-    name: "Park Słupna",
-    address: "Park Słupna",
-    pm25: 22,
-    quality: "good",
-  },
-  {
-    id: 3,
-    name: "Urząd Miasta",
-    address: "ul. Powstańców 1",
-    pm25: 35,
-    quality: "moderate",
-  },
-  {
-    id: 4,
-    name: "Brzezinka – Biblioteka",
-    address: "ul. Laryska 5",
-    pm25: 20,
-    quality: "good",
-  },
-  {
-    id: 5,
-    name: "Bytomska 37",
-    address: "ul. Bytomska 37",
-    pm25: 28,
-    quality: "moderate",
-  },
-  {
-    id: 6,
-    name: "Brzozowa",
-    address: "ul. Brzozowa",
-    pm25: 19,
-    quality: "good",
-  },
-];
+// ── Air quality – GIOŚ API v1 ─────────────────────────────────────────────────
+const GIOS = 'https://api.gios.gov.pl/pjp-api/v1/rest';
+const MYSLOWICE = { lat: 50.235, lng: 19.14 };
+const AIR_TTL = 30 * 60 * 1000;
+let airCache = null;
+let airCacheTs = 0;
+
+function distKm(lat1, lon1, lat2, lon2) {
+  const R = 6371, d2r = Math.PI / 180;
+  const dLat = (lat2 - lat1) * d2r;
+  const dLon = (lon2 - lon1) * d2r;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * d2r) * Math.cos(lat2 * d2r) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function indexValToQuality(v) {
+  if (v === null || v === undefined) return null;
+  if (v <= 1) return 'good';
+  if (v <= 3) return 'moderate';
+  return 'poor';
+}
+
+function pm25ToQuality(v) {
+  if (v === null) return 'unknown';
+  if (v < 25) return 'good';
+  if (v < 50) return 'moderate';
+  return 'poor';
+}
+
+async function giosFetch(path) {
+  const r = await fetch(`${GIOS}${path}`, { signal: AbortSignal.timeout(8000) });
+  if (!r.ok) throw new Error(`GIOŚ ${path} → ${r.status}`);
+  return r.json();
+}
+
+async function latestValue(sensorId) {
+  try {
+    const d = await giosFetch(`/data/getData/${sensorId}`);
+    const v = d['Lista danych pomiarowych']?.find(x => x['Wartość'] !== null);
+    return v ? { value: v['Wartość'], date: v['Data'] } : null;
+  } catch { return null; }
+}
+
+async function fetchAirData() {
+  if (airCache && Date.now() - airCacheTs < AIR_TTL) return airCache;
+
+  const all = await giosFetch('/station/findAll?size=500&page=0');
+  const stations = all['Lista stacji pomiarowych'] ?? [];
+
+  const nearby = stations
+    .map(s => ({ ...s, dist: distKm(MYSLOWICE.lat, MYSLOWICE.lng, parseFloat(s['WGS84 φ N']), parseFloat(s['WGS84 λ E'])) }))
+    .filter(s => s.dist <= 20)
+    .sort((a, b) => a.dist - b.dist)
+    .slice(0, 8);
+
+  const results = await Promise.all(nearby.map(async (station) => {
+    const stationId = station['Identyfikator stacji'];
+    try {
+      const [sensorsData, index] = await Promise.all([
+        giosFetch(`/station/sensors/${stationId}`),
+        giosFetch(`/aqindex/getIndex/${stationId}`).catch(() => null),
+      ]);
+
+      const sensors = sensorsData['Lista stanowisk pomiarowych dla podanej stacji'] ?? [];
+      const pm25s = sensors.find(s => s['Wskaźnik - kod'] === 'PM2.5');
+      const pm10s = sensors.find(s => s['Wskaźnik - kod'] === 'PM10');
+
+      const [pm25res, pm10res] = await Promise.all([
+        pm25s ? latestValue(pm25s['Identyfikator stanowiska']) : Promise.resolve(null),
+        pm10s ? latestValue(pm10s['Identyfikator stanowiska']) : Promise.resolve(null),
+      ]);
+
+      const pm25 = pm25res !== null ? Math.round(pm25res.value) : null;
+      const pm10 = pm10res !== null ? Math.round(pm10res.value) : null;
+
+      const qualityFromIndex =
+        indexValToQuality(index?.['Wartość indeksu dla wskaźnika PM2.5']) ??
+        indexValToQuality(index?.['Wartość indeksu']);
+
+      return {
+        id: stationId,
+        name: station['Nazwa stacji'],
+        address: station['Ulica'] || '',
+        city: station['Nazwa miasta'] || '',
+        pm25,
+        pm10,
+        quality: qualityFromIndex ?? pm25ToQuality(pm25),
+        updatedAt: index?.['Data wykonania obliczeń indeksu'] ?? pm25res?.date ?? null,
+      };
+    } catch { return null; }
+  }));
+
+  airCache = results.filter(Boolean);
+  airCacheTs = Date.now();
+  return airCache;
+}
+
+// ── Air quality – Airly API ───────────────────────────────────────────────────
+const AIRLY_BASE = 'https://airapi.airly.eu/v2';
+const AIRLY_CENTER = { lat: 50.2271, lng: 19.1658 };
+let airlyCache = null;
+let airlyCacheTs = 0;
+
+const AIRLY_LEVEL = {
+  VERY_LOW: 'good', LOW: 'good',
+  MEDIUM: 'moderate',
+  HIGH: 'poor', VERY_HIGH: 'poor',
+};
+
+async function airlyFetch(path) {
+  const key = process.env.AIRLY_API_KEY;
+  if (!key) throw new Error('Brak AIRLY_API_KEY w .env');
+  const r = await fetch(`${AIRLY_BASE}${path}`, {
+    headers: { apikey: key, 'Accept-Language': 'pl' },
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!r.ok) throw new Error(`Airly ${path} → ${r.status}`);
+  return r.json();
+}
+
+async function fetchAirlyData() {
+  if (airlyCache && Date.now() - airlyCacheTs < AIR_TTL) return airlyCache;
+
+  const installations = await airlyFetch(
+    `/installations/nearest?lat=${AIRLY_CENTER.lat}&lng=${AIRLY_CENTER.lng}&maxDistanceKM=5&maxResults=10`
+  );
+
+  const results = await Promise.all(installations.map(async (inst) => {
+    try {
+      const m = await airlyFetch(`/measurements/installation?installationId=${inst.id}`);
+      const values = m.current?.values ?? [];
+      const index  = m.current?.indexes?.[0];
+
+      const get = name => {
+        const v = values.find(x => x.name === name)?.value;
+        return v != null ? Math.round(v) : null;
+      };
+
+      return {
+        id: `airly-${inst.id}`,
+        name: [inst.address.displayAddress1, inst.address.displayAddress2].filter(Boolean).join(', '),
+        address: [inst.address.street, inst.address.number].filter(Boolean).join(' '),
+        city: inst.address.city ?? '',
+        pm25: get('PM25'),
+        pm10: get('PM10'),
+        quality: AIRLY_LEVEL[index?.level] ?? pm25ToQuality(get('PM25')),
+        updatedAt: m.current?.tillDateTime?.replace('T', ' ').slice(0, 16) ?? null,
+        source: 'airly',
+      };
+    } catch { return null; }
+  }));
+
+  airlyCache = results.filter(Boolean);
+  airlyCacheTs = Date.now();
+  return airlyCache;
+}
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.get("/api/aed", (_req, res) => res.json(aedLocations));
 app.get("/api/toilets", (_req, res) => res.json(toilets));
 app.get("/api/eco", (_req, res) => res.json(ecoPoints));
-app.get("/api/air", (_req, res) => res.json(airSensors));
+app.get('/api/air', async (_req, res) => {
+  const [gios, airly] = await Promise.allSettled([fetchAirData(), fetchAirlyData()]);
+  const data = [
+    ...(gios.status === 'fulfilled' ? gios.value : []),
+    ...(airly.status === 'fulfilled' ? airly.value : []),
+  ];
+  if (data.length === 0) {
+    const err = gios.reason?.message ?? airly.reason?.message ?? 'Błąd obu źródeł';
+    return res.status(502).json({ error: err });
+  }
+  res.json(data);
+});
 
 app.get("/api/weather", async (_req, res) => {
   try {

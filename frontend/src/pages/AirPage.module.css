@@ -46,7 +46,9 @@
   margin-bottom: 0.2rem;
 }
 
-.sensorAddr { font-size: 0.8rem; color: var(--c-muted); margin: 0; }
+.sensorCity { font-size: 0.78rem; color: var(--c-text); font-weight: 600; margin: 0.1rem 0 0; }
+.sensorAddr { font-size: 0.78rem; color: var(--c-muted); margin: 0.1rem 0 0; }
+.sourceTag { font-size: 0.68rem; color: var(--c-muted); margin: 0.2rem 0 0; text-transform: uppercase; letter-spacing: 0.05em; }
 
 /* Gauge */
 .gaugeWrap {
@@ -61,6 +63,17 @@
   color: var(--c-muted);
   margin-top: -4px;
 }
+
+/* PM10 */
+.pm10Row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+}
+.pm10Label { color: var(--c-muted); }
+.pm10Value { font-weight: 600; color: var(--c-text); }
 
 /* WHO norma */
 .whoRow {
@@ -81,4 +94,11 @@
 .whoStatus {
   font-size: 0.72rem;
   font-weight: 600;
+}
+
+.updatedAt {
+  font-size: 0.68rem;
+  color: var(--c-muted);
+  margin-left: auto;
+  padding-left: 0.4rem;
 }
