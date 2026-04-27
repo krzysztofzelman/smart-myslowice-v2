@@ -72,7 +72,7 @@ export default function AirPage() {
 
       <div className={styles.statsRow}>
         <Card accent="var(--c-blue)">
-          <p className={styles.statNum}>{loading ? '…' : sensors?.length ?? 0}</p>
+          <p className={styles.statNum}>{loading ? '…' : validPm25.length}</p>
           <p className={styles.statLbl}>Stacje aktywne</p>
         </Card>
         <Card accent={avgAccent}>
@@ -89,7 +89,7 @@ export default function AirPage() {
       {error   && <p style={{ color: 'var(--c-red)' }}>Błąd: {error}</p>}
 
       <div className={styles.grid}>
-        {sensors?.map(s => {
+        {validPm25.map(s => {
           const q = QUALITY[s.quality] ?? QUALITY.unknown;
           const updated = formatUpdated(s.updatedAt);
           return (

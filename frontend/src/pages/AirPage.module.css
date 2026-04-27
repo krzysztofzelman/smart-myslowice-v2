@@ -25,9 +25,14 @@
 .statLbl { font-size: 0.78rem; color: var(--c-muted); text-transform: uppercase; letter-spacing: 0.06em; }
 
 .grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 1rem;
+}
+
+.grid > * {
+  flex: 0 0 260px;
 }
 
 .sensorTop {
