@@ -1,0 +1,116 @@
+.page { display: flex; flex-direction: column; gap: 1.5rem; }
+
+/* ── Alert banner ──────────────────────────────────────────────────────── */
+.alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.2rem 1.5rem;
+  border: 1px solid;
+  border-radius: var(--radius);
+  flex-wrap: wrap;
+}
+
+.alertLeft  { display: flex; align-items: center; gap: 1rem; }
+.alertIcon  { font-size: 1.8rem; }
+.alertTitle { font-weight: 700; font-size: 1rem; }
+.alertSub   { font-size: 0.85rem; color: var(--c-muted); margin-top: 0.2rem; }
+
+/* ── Stats ─────────────────────────────────────────────────────────────── */
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+.statNum {
+  font-family: 'DM Serif Display', serif;
+  font-size: 2.6rem;
+  color: var(--c-text);
+  line-height: 1;
+  margin-bottom: 0.4rem;
+}
+.statLbl {
+  font-size: 0.8rem;
+  color: var(--c-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ── Map ────────────────────────────────────────────────────────────────── */
+.mapWrap {
+  height: 520px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--c-border);
+}
+
+/* ── Station list ───────────────────────────────────────────────────────── */
+.listWrap {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+
+.listTitle {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+}
+
+.list { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.listItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  text-align: left;
+  transition: background 0.2s, border-color 0.2s;
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--c-text);
+  flex-wrap: wrap;
+  width: 100%;
+}
+.listItem:hover {
+  background: rgba(255,255,255,0.04);
+  border-color: var(--c-border);
+}
+
+.listMain  { display: flex; flex-direction: column; gap: 0.25rem; }
+.listName  { font-weight: 600; font-size: 0.95rem; }
+.listRiver { font-weight: 400; color: var(--c-muted); font-size: 0.85rem; margin-left: 0.5rem; }
+.listAddr  { font-size: 0.82rem; color: var(--c-muted); }
+
+.listRight {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.levelVal {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1;
+  min-width: 4rem;
+  text-align: right;
+}
+
+.hint   { color: var(--c-muted); font-size: 0.9rem; padding: 0.5rem 0; }
+.err    { color: var(--c-red);   font-size: 0.9rem; padding: 0.5rem 0; }
+
+.source {
+  margin-top: 1.2rem;
+  font-size: 0.78rem;
+  color: var(--c-muted);
+  border-top: 1px solid var(--c-border);
+  padding-top: 0.9rem;
+}

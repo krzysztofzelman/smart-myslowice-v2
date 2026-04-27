@@ -6,6 +6,7 @@ import AirPage from './pages/AirPage.jsx';
 import WeatherPage from './pages/WeatherPage.jsx';
 import ToiletsPage from './pages/ToiletsPage.jsx';
 import EcoPage from './pages/EcoPage.jsx';
+import WaterPage from './pages/WaterPage.jsx';
 import { useTheme } from './hooks/useTheme.js';
 import styles from './App.module.css';
 
@@ -15,6 +16,7 @@ const TABS = [
   { id: 'weather', label: 'Pogoda',         icon: '⛅' },
   { id: 'toilets', label: 'Toalety',        icon: '🚻' },
   { id: 'eco',     label: 'Eko-punkty',     icon: '♻️' },
+  { id: 'water',   label: 'Stan Wód',       icon: '💧' },
 ];
 
 const PAGE = {
@@ -23,6 +25,7 @@ const PAGE = {
   weather: <WeatherPage />,
   toilets: <ToiletsPage />,
   eco:     <EcoPage />,
+  water:   <WaterPage />,
 };
 
 const THEME_LABEL = {
