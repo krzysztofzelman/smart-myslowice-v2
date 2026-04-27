@@ -8,6 +8,9 @@ let cacheTs = 0;
 
 const RIVERS_LC = ['wisła', 'przemsza', 'brynica'];
 const STATION_WHITELIST = new Set(['150190070']); // Szabelnia (Czarna Przemsza, Mysłowice)
+const RIVER_OVERRIDES = {
+  '150190070': 'Brynica',
+};
 
 function haversineKm(lat1, lon1, lat2, lon2) {
   const R = 6371, d2r = Math.PI / 180;
@@ -51,7 +54,7 @@ export default async function handler(req, res) {
         return {
           id:          s.id_stacji,
           name:        s.stacja,
-          river:       s.rzeka,
+          river:       RIVER_OVERRIDES[s.id_stacji] ?? s.rzeka,
           province:    s.wojewodztwo ?? null,
           level,
           measuredAt:  s.stan_wody_data_pomiaru ?? null,
