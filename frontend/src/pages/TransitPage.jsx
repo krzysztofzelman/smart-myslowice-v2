@@ -18,7 +18,8 @@ const isTram = v => v.routeType === 0;
 function makeVehicleIcon(vehicle) {
   const tram = isTram(vehicle);
   const bg   = tram ? '#e03045' : '#22c55e';
-  const label = vehicle.route.length > 4 ? vehicle.route.slice(0, 4) : vehicle.route;
+  const raw  = vehicle.routeName ?? vehicle.route;
+  const label = raw.length > 4 ? raw.slice(0, 4) : raw;
   return L.divIcon({
     className: '',
     html: `<div style="min-width:36px;height:36px;border-radius:10px;background:${bg};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;border:2px solid #fff;box-shadow:0 4px 12px ${bg}88;padding:0 4px;font-family:'Space Grotesk',sans-serif;">${label}</div>`,
@@ -45,6 +46,8 @@ export default function TransitPage() {
   const [vehiclesLoading, setVLoading]  = useState(true);
   const [vehiclesError, setVError]      = useState(null);
   const [flyTo, setFlyTo]               = useState(null);
+  const [stopsOpen, setStopsOpen]       = useState(false);
+  const [stopSearch, setStopSearch]     = useState('');
   const [lastRefresh, setLastRefresh]   = useState(null);
   const [theme, setTheme]               = useState(
     document.documentElement.getAttribute('data-theme') || 'dark'
@@ -173,9 +176,14 @@ export default function TransitPage() {
               <Popup>
                 <div style={{ minWidth: 180 }}>
                   <strong style={{ fontSize: '1.1rem', display: 'block', marginBottom: 4 }}>
-                    {isTram(v) ? '🚃' : '🚌'} Linia {v.route}
+                    {isTram(v) ? '🚃' : '🚌'} {v.routeName ?? v.route}
                   </strong>
-                  {v.direction !== null && (
+                  {v.headsign && (
+                    <p style={{ fontSize: '0.85rem', marginBottom: 4 }}>
+                      → {v.headsign}
+                    </p>
+                  )}
+                  {!v.headsign && v.direction !== null && (
                     <p style={{ fontSize: '0.85rem', color: '#9ca3af', marginBottom: 4 }}>
                       Kierunek: {v.direction === 0 ? '→ Tam' : '← Powrót'}
                     </p>
@@ -213,20 +221,47 @@ export default function TransitPage() {
 
       {/* ── Stop list ── */}
       <div className={styles.listWrap}>
-        <h2 className={styles.listTitle}>Przystanki w Mysłowicach</h2>
-        {stopsLoading && <p className={styles.hint}>Ładowanie przystanków… (pierwsze pobranie może zająć chwilę)</p>}
-        {stopsError   && <p className={styles.err}>Błąd ładowania przystanków: {stopsError}</p>}
-        <div className={styles.list}>
-          {stops?.map(stop => (
-            <button
-              key={stop.stop_id}
-              className={styles.listItem}
-              onClick={() => setFlyTo([stop.lat, stop.lon])}
-            >
-              <span className={styles.listName}>🚏 {stop.stop_name}</span>
-            </button>
-          ))}
-        </div>
+        <button className={styles.listHeader} onClick={() => setStopsOpen(o => !o)}>
+          <h2 className={styles.listTitle}>
+            Przystanki w Mysłowicach
+            {stops && <span className={styles.listCount}>{stops.length}</span>}
+          </h2>
+          <span className={`${styles.listToggle}${stopsOpen ? ' ' + styles.listToggleOpen : ''}`}>▼</span>
+        </button>
+
+        {stopsOpen && (
+          <>
+            <div className={styles.searchWrap}>
+              <input
+                type="search"
+                className={styles.searchInput}
+                placeholder="Szukaj przystanku…"
+                value={stopSearch}
+                onChange={e => setStopSearch(e.target.value)}
+                autoFocus
+              />
+            </div>
+            {stopsLoading && <p className={styles.hint}>Ładowanie przystanków… (pierwsze pobranie może zająć chwilę)</p>}
+            {stopsError   && <p className={styles.err}>Błąd ładowania przystanków: {stopsError}</p>}
+            <div className={styles.list}>
+              {stops
+                ?.filter(s => s.stop_name.toLowerCase().includes(stopSearch.toLowerCase()))
+                .map(stop => (
+                  <button
+                    key={stop.stop_id}
+                    className={styles.listItem}
+                    onClick={() => setFlyTo([stop.lat, stop.lon])}
+                  >
+                    <span className={styles.listName}>🚏 {stop.stop_name}</span>
+                  </button>
+                ))}
+              {stopSearch && stops && !stops.some(s => s.stop_name.toLowerCase().includes(stopSearch.toLowerCase())) && (
+                <p className={styles.hint}>Brak wyników dla „{stopSearch}"</p>
+              )}
+            </div>
+          </>
+        )}
+
         <p className={styles.source}>
           Źródło: ZTM / Metropolia GZM · gtfsrt.transportgzm.pl · mkuran.pl/gtfs · CC BY 4.0
         </p>

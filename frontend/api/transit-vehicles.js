@@ -1,14 +1,14 @@
 import GtfsRealtimeBindings from 'gtfs-realtime-bindings';
 import AdmZip from 'adm-zip';
 
-const VEHICLES_URL = 'https://gtfsrt.transportgzm.pl:5443/gtfsrt/gzm/vehiclePositions';
+const VEHICLES_URL  = 'https://gtfsrt.transportgzm.pl:5443/gtfsrt/gzm/vehiclePositions';
 const STOPS_ZIP_URL = 'https://mkuran.pl/gtfs/gzm.zip';
 const MYSLOWICE_BBOX = { minLat: 50.17, maxLat: 50.26, minLon: 19.09, maxLon: 19.22 };
 const VEHICLES_TTL = 10_000;
-const STATIC_TTL = 24 * 60 * 60 * 1000;
+const STATIC_TTL   = 24 * 60 * 60 * 1000;
 
 let vehiclesCache = null, vehiclesCacheTs = 0;
-let routeTypesCache = null, routeTypesCacheTs = 0;
+let staticCache = null, staticCacheTs = 0;
 
 function inBbox({ minLat, maxLat, minLon, maxLon }, lat, lon) {
   return lat >= minLat && lat <= maxLat && lon >= minLon && lon <= maxLon;
@@ -43,8 +43,8 @@ function parseCsv(text) {
   });
 }
 
-async function fetchRouteTypes() {
-  if (routeTypesCache && Date.now() - routeTypesCacheTs < STATIC_TTL) return routeTypesCache;
+async function fetchStaticData() {
+  if (staticCache && Date.now() - staticCacheTs < STATIC_TTL) return staticCache;
 
   const r = await fetch(STOPS_ZIP_URL, { signal: AbortSignal.timeout(60000) });
   if (!r.ok) throw new Error(`GTFS ZIP → ${r.status}`);
@@ -52,16 +52,27 @@ async function fetchRouteTypes() {
   const zip = new AdmZip(buf);
 
   const routeTypes = {};
+  const routeNames = {};
   const routesEntry = zip.getEntry('routes.txt');
   if (routesEntry) {
     parseCsv(routesEntry.getData().toString('utf8')).forEach(row => {
-      if (row.route_id) routeTypes[row.route_id] = parseInt(row.route_type || '3', 10);
+      if (!row.route_id) return;
+      routeTypes[row.route_id] = parseInt(row.route_type || '3', 10);
+      if (row.route_short_name) routeNames[row.route_id] = row.route_short_name;
     });
   }
 
-  routeTypesCache = routeTypes;
-  routeTypesCacheTs = Date.now();
-  return routeTypes;
+  const tripHeadsigns = {};
+  const tripsEntry = zip.getEntry('trips.txt');
+  if (tripsEntry) {
+    parseCsv(tripsEntry.getData().toString('utf8')).forEach(row => {
+      if (row.trip_id && row.trip_headsign) tripHeadsigns[row.trip_id] = row.trip_headsign;
+    });
+  }
+
+  staticCache = { routeTypes, routeNames, tripHeadsigns };
+  staticCacheTs = Date.now();
+  return staticCache;
 }
 
 export default async function handler(req, res) {
@@ -70,15 +81,16 @@ export default async function handler(req, res) {
   }
 
   try {
-    const [rtRes, routeTypes] = await Promise.all([
+    const [rtRes, staticData] = await Promise.all([
       fetch(VEHICLES_URL, { signal: AbortSignal.timeout(8000) }),
-      fetchRouteTypes().catch(() => routeTypesCache ?? {}),
+      fetchStaticData().catch(() => staticCache ?? { routeTypes: {}, routeNames: {}, tripHeadsigns: {} }),
     ]);
 
     if (!rtRes.ok) throw new Error(`GTFS-RT → ${rtRes.status}`);
 
     const buf = await rtRes.arrayBuffer();
     const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(new Uint8Array(buf));
+    const { routeTypes, routeNames, tripHeadsigns } = staticData;
 
     const vehicles = [];
     for (const entity of feed.entity) {
@@ -86,12 +98,15 @@ export default async function handler(req, res) {
       const { latitude: lat, longitude: lon } = entity.vehicle.position;
       if (!inBbox(MYSLOWICE_BBOX, lat, lon)) continue;
       const routeId = entity.vehicle.trip?.routeId ?? '?';
+      const tripId  = entity.vehicle.trip?.tripId  ?? null;
       vehicles.push({
         id: entity.id,
         lat,
         lon,
-        route: routeId,
-        routeType: routeTypes[routeId] ?? 3,
+        route:     routeId,
+        routeName: routeNames[routeId]              ?? null,
+        routeType: routeTypes[routeId]              ?? 3,
+        headsign:  tripId ? (tripHeadsigns[tripId] ?? null) : null,
         direction: toLong(entity.vehicle.trip?.directionId) ?? null,
         timestamp: toLong(entity.vehicle.timestamp),
       });

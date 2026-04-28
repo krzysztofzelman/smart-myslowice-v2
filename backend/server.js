@@ -482,14 +482,25 @@ async function fetchTransitStatic() {
     }));
 
   const routeTypes = {};
+  const routeNames = {};
   const routesEntry = zip.getEntry('routes.txt');
   if (routesEntry) {
     parseCsv(routesEntry.getData().toString('utf8')).forEach(r => {
-      if (r.route_id) routeTypes[r.route_id] = parseInt(r.route_type || '3', 10);
+      if (!r.route_id) return;
+      routeTypes[r.route_id] = parseInt(r.route_type || '3', 10);
+      if (r.route_short_name) routeNames[r.route_id] = r.route_short_name;
     });
   }
 
-  transitStaticCache = { stops, routeTypes };
+  const tripHeadsigns = {};
+  const tripsEntry = zip.getEntry('trips.txt');
+  if (tripsEntry) {
+    parseCsv(tripsEntry.getData().toString('utf8')).forEach(r => {
+      if (r.trip_id && r.trip_headsign) tripHeadsigns[r.trip_id] = r.trip_headsign;
+    });
+  }
+
+  transitStaticCache = { stops, routeTypes, routeNames, tripHeadsigns };
   transitStaticTs = Date.now();
   return transitStaticCache;
 }
@@ -499,13 +510,13 @@ async function fetchVehicleData() {
 
   const [res, staticData] = await Promise.all([
     fetch(VEHICLES_URL, { signal: AbortSignal.timeout(8000) }),
-    fetchTransitStatic().catch(() => ({ routeTypes: {} })),
+    fetchTransitStatic().catch(() => ({ routeTypes: {}, routeNames: {}, tripHeadsigns: {} })),
   ]);
   if (!res.ok) throw new Error(`GTFS-RT → ${res.status}`);
 
   const buf = await res.arrayBuffer();
   const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(new Uint8Array(buf));
-  const { routeTypes } = staticData;
+  const { routeTypes, routeNames, tripHeadsigns } = staticData;
 
   const vehicles = [];
   for (const entity of feed.entity) {
@@ -513,12 +524,15 @@ async function fetchVehicleData() {
     const { latitude: lat, longitude: lon } = entity.vehicle.position;
     if (!inBbox(MYSLOWICE_BBOX, lat, lon)) continue;
     const routeId = entity.vehicle.trip?.routeId ?? '?';
+    const tripId  = entity.vehicle.trip?.tripId  ?? null;
     vehicles.push({
       id: entity.id,
       lat,
       lon,
-      route: routeId,
-      routeType: routeTypes[routeId] ?? 3,
+      route:     routeId,
+      routeName: routeNames[routeId]              ?? null,
+      routeType: routeTypes[routeId]              ?? 3,
+      headsign:  tripId ? (tripHeadsigns[tripId] ?? null) : null,
       direction: toLong(entity.vehicle.trip?.directionId) ?? null,
       timestamp: toLong(entity.vehicle.timestamp),
     });
