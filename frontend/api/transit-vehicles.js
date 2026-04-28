@@ -97,14 +97,14 @@ export default async function handler(req, res) {
       if (!entity.vehicle?.position) continue;
       const { latitude: lat, longitude: lon } = entity.vehicle.position;
       if (!inBbox(MYSLOWICE_BBOX, lat, lon)) continue;
-      const routeId = entity.vehicle.trip?.routeId ?? '?';
-      const tripId  = entity.vehicle.trip?.tripId  ?? null;
+      const routeId = entity.vehicle.trip?.routeId || entity.id.split('_')[0] || '?';
+      const tripId  = entity.vehicle.trip?.tripId  || null;
       vehicles.push({
         id: entity.id,
         lat,
         lon,
         route:     routeId,
-        routeName: routeNames[routeId]              ?? null,
+        routeName: routeNames[routeId]              ?? routeId,
         routeType: routeTypes[routeId]              ?? 3,
         headsign:  tripId ? (tripHeadsigns[tripId] ?? null) : null,
         direction: toLong(entity.vehicle.trip?.directionId) ?? null,
