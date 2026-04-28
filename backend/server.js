@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import fetch from "node-fetch";
+import GtfsRealtimeBindings from "gtfs-realtime-bindings";
+import AdmZip from "adm-zip";
 
 const app = express();
 const PORT = 3001;
@@ -414,6 +416,119 @@ async function fetchAirlyData() {
   return airlyCache;
 }
 
+// ── Transit (GTFS-RT + GTFS Static) ──────────────────────────────────────────
+const MYSLOWICE_BBOX = { minLat: 50.17, maxLat: 50.26, minLon: 19.09, maxLon: 19.22 };
+const VEHICLES_URL   = 'https://gtfsrt.transportgzm.pl:5443/gtfsrt/gzm/vehiclePositions';
+const STOPS_ZIP_URL  = 'https://mkuran.pl/gtfs/gzm.zip';
+const VEHICLES_TTL   = 10_000;
+const STATIC_TTL     = 24 * 60 * 60 * 1000;
+
+let vehiclesCache = null, vehiclesCacheTs = 0;
+let transitStaticCache = null, transitStaticTs = 0;
+
+function inBbox({ minLat, maxLat, minLon, maxLon }, lat, lon) {
+  return lat >= minLat && lat <= maxLat && lon >= minLon && lon <= maxLon;
+}
+
+function toLong(v) {
+  if (!v) return null;
+  if (typeof v === 'object' && typeof v.toNumber === 'function') return v.toNumber();
+  return Number(v);
+}
+
+function parseCsvLine(line) {
+  const result = [];
+  let inQuote = false, current = '';
+  for (const ch of line) {
+    if (ch === '"') { inQuote = !inQuote; }
+    else if (ch === ',' && !inQuote) { result.push(current); current = ''; }
+    else { current += ch; }
+  }
+  result.push(current);
+  return result;
+}
+
+function parseCsv(text) {
+  const lines = text.replace(/\r/g, '').split('\n').filter(l => l.trim());
+  const headers = parseCsvLine(lines[0]).map(h => h.trim());
+  return lines.slice(1).map(line => {
+    const vals = parseCsvLine(line);
+    const row = {};
+    headers.forEach((h, i) => { row[h] = (vals[i] ?? '').trim(); });
+    return row;
+  });
+}
+
+async function fetchTransitStatic() {
+  if (transitStaticCache && Date.now() - transitStaticTs < STATIC_TTL) return transitStaticCache;
+
+  const res = await fetch(STOPS_ZIP_URL, { signal: AbortSignal.timeout(60000) });
+  if (!res.ok) throw new Error(`GTFS ZIP → ${res.status}`);
+  const buf = Buffer.from(await res.arrayBuffer());
+  const zip = new AdmZip(buf);
+
+  const stopsEntry = zip.getEntry('stops.txt');
+  if (!stopsEntry) throw new Error('stops.txt not found in ZIP');
+  const stops = parseCsv(stopsEntry.getData().toString('utf8'))
+    .filter(r => {
+      const lat = parseFloat(r.stop_lat), lon = parseFloat(r.stop_lon);
+      return !isNaN(lat) && !isNaN(lon) && inBbox(MYSLOWICE_BBOX, lat, lon);
+    })
+    .map(r => ({
+      stop_id: r.stop_id,
+      stop_name: r.stop_name,
+      lat: parseFloat(r.stop_lat),
+      lon: parseFloat(r.stop_lon),
+    }));
+
+  const routeTypes = {};
+  const routesEntry = zip.getEntry('routes.txt');
+  if (routesEntry) {
+    parseCsv(routesEntry.getData().toString('utf8')).forEach(r => {
+      if (r.route_id) routeTypes[r.route_id] = parseInt(r.route_type || '3', 10);
+    });
+  }
+
+  transitStaticCache = { stops, routeTypes };
+  transitStaticTs = Date.now();
+  return transitStaticCache;
+}
+
+async function fetchVehicleData() {
+  if (vehiclesCache && Date.now() - vehiclesCacheTs < VEHICLES_TTL) return vehiclesCache;
+
+  const [res, staticData] = await Promise.all([
+    fetch(VEHICLES_URL, { signal: AbortSignal.timeout(8000) }),
+    fetchTransitStatic().catch(() => ({ routeTypes: {} })),
+  ]);
+  if (!res.ok) throw new Error(`GTFS-RT → ${res.status}`);
+
+  const buf = await res.arrayBuffer();
+  const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(new Uint8Array(buf));
+  const { routeTypes } = staticData;
+
+  const vehicles = [];
+  for (const entity of feed.entity) {
+    if (!entity.vehicle?.position) continue;
+    const { latitude: lat, longitude: lon } = entity.vehicle.position;
+    if (!inBbox(MYSLOWICE_BBOX, lat, lon)) continue;
+    const routeId = entity.vehicle.trip?.routeId ?? '?';
+    vehicles.push({
+      id: entity.id,
+      lat,
+      lon,
+      route: routeId,
+      routeType: routeTypes[routeId] ?? 3,
+      direction: toLong(entity.vehicle.trip?.directionId) ?? null,
+      timestamp: toLong(entity.vehicle.timestamp),
+    });
+  }
+
+  vehiclesCache = vehicles;
+  vehiclesCacheTs = Date.now();
+  return vehicles;
+}
+
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.get("/api/aed", (_req, res) => res.json(aedLocations));
 app.get("/api/toilets", (_req, res) => res.json(toilets));
@@ -459,6 +574,27 @@ app.get('/api/water-level', async (_req, res) => {
     res.json(data);
   } catch (err) {
     if (waterCache) return res.json(waterCache);
+    res.status(502).json({ error: err.message });
+  }
+});
+
+app.get('/api/transit-vehicles', async (_req, res) => {
+  try {
+    res.json(await fetchVehicleData());
+  } catch (err) {
+    console.warn('[transit-vehicles]', err.message);
+    // Graceful degradation: feed blocked from this network; return stale cache or empty array.
+    // When deployed on a Polish server, gtfsrt.transportgzm.pl:5443 will be reachable.
+    res.json(vehiclesCache ?? []);
+  }
+});
+
+app.get('/api/transit-stops', async (_req, res) => {
+  try {
+    const { stops } = await fetchTransitStatic();
+    res.json(stops);
+  } catch (err) {
+    if (transitStaticCache) return res.json(transitStaticCache.stops);
     res.status(502).json({ error: err.message });
   }
 });
