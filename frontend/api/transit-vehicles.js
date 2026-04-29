@@ -4,7 +4,7 @@ import AdmZip from 'adm-zip';
 const VEHICLES_URL  = 'https://gtfsrt.transportgzm.pl:5443/gtfsrt/gzm/vehiclePositions';
 const STOPS_ZIP_URL = 'https://mkuran.pl/gtfs/gzm.zip';
 const MYSLOWICE_BBOX = { minLat: 50.17, maxLat: 50.26, minLon: 19.09, maxLon: 19.22 };
-const VEHICLES_TTL = 10_000;
+const VEHICLES_TTL = 15_000;
 const STATIC_TTL   = 24 * 60 * 60 * 1000;
 
 let vehiclesCache = null, vehiclesCacheTs = 0;
@@ -82,7 +82,7 @@ export default async function handler(req, res) {
 
   try {
     const [rtRes, staticData] = await Promise.all([
-      fetch(VEHICLES_URL, { signal: AbortSignal.timeout(8000) }),
+      fetch(VEHICLES_URL, { signal: AbortSignal.timeout(15000) }),
       fetchStaticData().catch(() => staticCache ?? { routeTypes: {}, routeNames: {}, tripHeadsigns: {} }),
     ]);
 

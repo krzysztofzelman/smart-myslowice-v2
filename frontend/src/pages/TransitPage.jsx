@@ -213,7 +213,13 @@ export default function TransitPage() {
         </div>
       </div>
 
-      {!vehiclesLoading && vehicles.length === 0 && (
+      {vehiclesError && (
+        <div className={styles.noticeError}>
+          ⚠️ Błąd ładowania pojazdów: {vehiclesError}
+        </div>
+      )}
+
+      {!vehiclesLoading && !vehiclesError && vehicles.length === 0 && (
         <div className={styles.notice}>
           ℹ️ Brak pojazdów w zasięgu Mysłowic. Możliwe przyczyny: godziny nocne, feed GTFS-RT niedostępny z tej sieci (wymagany dostęp z polskiego serwera).
         </div>
