@@ -13,7 +13,6 @@ const QUALITY = {
 const PM_BARS = [
   { key: 'pm25', label: 'PM2.5', color: null },
   { key: 'pm10', label: 'PM10',  color: '#3b82f6' },
-  { key: 'pm1',  label: 'PM1',   color: '#a855f7' },
 ];
 
 function PmBars({ s, qColor }) {
@@ -103,6 +102,11 @@ export default function AirPage() {
     ? Math.round(validPm25.reduce((s, x) => s + x.pm25, 0) / validPm25.length)
     : null;
 
+  const validPm10 = sensors?.filter(s => s.pm10 !== null) ?? [];
+  const avgPm10 = validPm10.length
+    ? Math.round(validPm10.reduce((s, x) => s + x.pm10, 0) / validPm10.length)
+    : null;
+
   const avgQuality = avgPm25 === null ? 'unknown'
     : avgPm25 < 25 ? 'good'
     : avgPm25 < 50 ? 'moderate'
@@ -129,9 +133,9 @@ export default function AirPage() {
           <p className={styles.statNum}>{loading ? '…' : avgPm25 ?? '--'}</p>
           <p className={styles.statLbl}>Średnie PM2.5 µg/m³</p>
         </Card>
-        <Card accent="var(--c-muted)">
-          <p className={styles.statNum}>15</p>
-          <p className={styles.statLbl}>Norma WHO µg/m³</p>
+        <Card accent="var(--c-blue)">
+          <p className={styles.statNum}>{loading ? '…' : avgPm10 ?? '--'}</p>
+          <p className={styles.statLbl}>Średnie PM10 µg/m³</p>
         </Card>
       </div>
 
