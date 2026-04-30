@@ -25,7 +25,19 @@ export default function EcoPage() {
 
       <div className={styles.list}>
         {points?.map(p => (
-          <Card key={p.id} accent="var(--c-green)">
+          <Card
+            key={p.id}
+            accent="var(--c-green)"
+            style={{ cursor: 'pointer' }}
+            onClick={() => {
+              if (window.confirm(`Otworzyć Google Maps i wyznaczyć trasę do ${p.name}?`)) {
+                window.open(
+                  `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.address)}`,
+                  '_blank'
+                );
+              }
+            }}
+          >
             <div className={styles.row}>
               <div className={styles.info}>
                 <p className={styles.name}>♻️ {p.name}</p>
