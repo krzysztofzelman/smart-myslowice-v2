@@ -20,12 +20,12 @@
 
 /* ── Motyw: ZMIERZCH / ŚWIT ─────────────────────────────────────────────── */
 [data-theme="dusk"] {
-  --c-bg:        #1c1410;
-  --c-surface:   #261c14;
-  --c-surface2:  #32231a;
-  --c-border:    rgba(255,200,120,0.1);
-  --c-text:      #f0e6d6;
-  --c-muted:     #9a8070;
+  --c-bg:        #6b7280;
+  --c-surface:   #757c8a;
+  --c-surface2:  #818896;
+  --c-border:    rgba(255,255,255,0.15);
+  --c-text:      #f9fafb;
+  --c-muted:     #d1d5db;
   --c-red:       #ff5c4e;
   --c-amber:     #f5a623;
   --c-green:     #34d399;

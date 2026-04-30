@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useFetch } from '../hooks/useFetch.js';
+import { useThemeContext } from '../ThemeContext.js';
 import Card from '../components/Card.jsx';
 import Badge from '../components/Badge.jsx';
 import styles from './WaterPage.module.css';
@@ -20,6 +21,8 @@ const STATUS_COLOR = {
   unknown: '#6b7280',
 };
 
+const BORDER_COLOR = { light: '#000000', dusk: '#ffffff', dark: '#ffffff' };
+
 function makeWaterIcon(status) {
   const c = STATUS_COLOR[status] || STATUS_COLOR.unknown;
   return L.divIcon({
@@ -34,6 +37,35 @@ function makeWaterIcon(status) {
 function FlyTo({ coords }) {
   const map = useMap();
   useEffect(() => { if (coords) map.flyTo(coords, 14, { duration: 1.2 }); }, [coords, map]);
+  return null;
+}
+
+function CityBorder({ borderColor }) {
+  const map = useMap();
+  const layerRef = useRef(null);
+
+  useEffect(() => {
+    let layer;
+    const url = 'https://nominatim.openstreetmap.org/search?' +
+      new URLSearchParams({ q: 'Mysłowice, Poland', polygon_geojson: '1', format: 'json', limit: '1' });
+    fetch(url)
+      .then(r => r.json())
+      .then(data => {
+        const geo = data?.[0]?.geojson;
+        if (!geo) return;
+        layer = L.geoJSON({ type: 'Feature', geometry: geo }, {
+          style: { color: borderColor, weight: 2, fillOpacity: 0 },
+        }).addTo(map);
+        layerRef.current = layer;
+      })
+      .catch(err => console.warn('[CityBorder]', err));
+    return () => { if (layer) { map.removeLayer(layer); layerRef.current = null; } };
+  }, [map]);
+
+  useEffect(() => {
+    layerRef.current?.setStyle({ color: borderColor });
+  }, [borderColor]);
+
   return null;
 }
 
@@ -59,24 +91,18 @@ const STATUS_BADGE = { safe: 'green',    warning: 'amber',         danger: 'red'
 
 export default function WaterPage() {
   const { data: stations, loading, error } = useFetch('/api/water-level');
-  const [flyTo, setFlyTo]   = useState(null);
-  const [theme, setTheme]   = useState(document.documentElement.getAttribute('data-theme') || 'dark');
+  const [flyTo, setFlyTo] = useState(null);
+  const { theme } = useThemeContext();
 
-  useEffect(() => {
-    const obs = new MutationObserver(() =>
-      setTheme(document.documentElement.getAttribute('data-theme') || 'dark')
-    );
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    return () => obs.disconnect();
-  }, []);
-
-  const isDark   = theme === 'dark' || theme === 'dusk';
-  const tileUrl  = isDark
+  const tileUrl  = theme === 'dark'
     ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
     : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+  const mapFilter = theme === 'dusk' ? 'brightness(0.7)' : 'none';;
 
-  const overall    = overallStatus(stations);
-  const alertCfg   = ALERT_CFG[overall];
+  const borderColor = BORDER_COLOR[theme] ?? '#ffffff';
+
+  const overall  = overallStatus(stations);
+  const alertCfg = ALERT_CFG[overall];
   const withCoords = stations?.filter(s => s.coordinates) ?? [];
 
   const count = (status) => stations?.filter(s => s.status === status).length ?? 0;
@@ -122,7 +148,7 @@ export default function WaterPage() {
       </div>
 
       {/* ── Map ────────────────────────────────────────────────────── */}
-      <div className={styles.mapWrap}>
+      <div className={styles.mapWrap} style={{ filter: mapFilter }}>
         <MapContainer
           center={[50.213, 19.166]}
           zoom={11}
@@ -134,6 +160,7 @@ export default function WaterPage() {
             attribution='&copy; <a href="https://carto.com/">CARTO</a>'
             maxZoom={19}
           />
+          <CityBorder borderColor={borderColor} />
           {flyTo && <FlyTo coords={flyTo} />}
           {withCoords.map(s => (
             <Marker

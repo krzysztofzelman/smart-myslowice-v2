@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Header from './components/Header.jsx';
 import Nav from './components/Nav.jsx';
 import AedPage from './pages/AedPage.jsx';
@@ -9,6 +9,7 @@ import EcoPage from './pages/EcoPage.jsx';
 import WaterPage from './pages/WaterPage.jsx';
 import TransitPage from './pages/TransitPage.jsx';
 import { useTheme } from './hooks/useTheme.js';
+import { ThemeContext } from './ThemeContext.js';
 import styles from './App.module.css';
 
 const TABS = [
@@ -31,32 +32,37 @@ const PAGE = {
   transit: <TransitPage />,
 };
 
-const THEME_LABEL = {
-  dark:  '🌙 Noc',
-  dusk:  '🌇 Zmierzch',
-  light: '☀️ Dzień',
-};
+const THEME_CYCLE = ['light', 'dusk', 'dark'];
 
 export default function App() {
   const [active, setActive] = useState('aed');
-  const theme = useTheme();
+  const autoTheme = useTheme();
+  const [manual, setManual] = useState(null);
+  const theme = manual ?? autoTheme;
 
-  // Aplikuj data-theme na <html> żeby CSS variables działały globalnie
+  const cycleTheme = useCallback(() => {
+    const current = document.documentElement.getAttribute('data-theme') ?? 'dark';
+    const next = THEME_CYCLE[(THEME_CYCLE.indexOf(current) + 1) % THEME_CYCLE.length];
+    setManual(next);
+  }, []);
+
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
   return (
-    <div className={styles.app}>
-      <Header themeLabel={THEME_LABEL[theme]} />
-      <Nav tabs={TABS} active={active} onSwitch={setActive} />
-      <main className={styles.main}>
-        {PAGE[active]}
-      </main>
-      <footer className={styles.footer}>
-        <p><strong>Smart Mysłowice</strong> — Projekt edukacyjny</p>
-        <p className={styles.footerSub}>Dane przykładowe wymagają weryfikacji z Urzędem Miasta · 2026</p>
-      </footer>
-    </div>
+    <ThemeContext.Provider value={{ theme, cycleTheme }}>
+      <div className={styles.app}>
+        <Header />
+        <Nav tabs={TABS} active={active} onSwitch={setActive} />
+        <main className={styles.main}>
+          {PAGE[active]}
+        </main>
+        <footer className={styles.footer}>
+          <p><strong>Smart Mysłowice</strong> — Projekt edukacyjny</p>
+          <p className={styles.footerSub}>Dane przykładowe wymagają weryfikacji z Urzędem Miasta · 2026</p>
+        </footer>
+      </div>
+    </ThemeContext.Provider>
   );
 }

@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useFetch } from '../hooks/useFetch.js';
+import { useThemeContext } from '../ThemeContext.js';
 import Card from '../components/Card.jsx';
 import Badge from '../components/Badge.jsx';
 import styles from './AedPage.module.css';
@@ -12,6 +13,8 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
+
+const BORDER_COLOR = { light: '#000000', dusk: '#ffffff', dark: '#ffffff' };
 
 const aedIcon = L.divIcon({
   className: '',
@@ -27,48 +30,45 @@ function FlyTo({ coords }) {
   return null;
 }
 
-function ThemedTileLayer() {
-  const theme = document.documentElement.getAttribute('data-theme');
-  const isDark = theme === 'dark' || theme === 'dusk';
+function CityBorder({ borderColor }) {
+  const map = useMap();
+  const layerRef = useRef(null);
 
-  if (isDark) {
-    return (
-      <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-        maxZoom={19}
-      />
-    );
-  }
-  return (
-    <TileLayer
-      url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-      attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-      maxZoom={19}
-    />
-  );
+  useEffect(() => {
+    let layer;
+    const url = 'https://nominatim.openstreetmap.org/search?' +
+      new URLSearchParams({ q: 'Mysłowice, Poland', polygon_geojson: '1', format: 'json', limit: '1' });
+    fetch(url)
+      .then(r => r.json())
+      .then(data => {
+        const geo = data?.[0]?.geojson;
+        if (!geo) return;
+        layer = L.geoJSON({ type: 'Feature', geometry: geo }, {
+          style: { color: borderColor, weight: 2, fillOpacity: 0 },
+        }).addTo(map);
+        layerRef.current = layer;
+      })
+      .catch(err => console.warn('[CityBorder]', err));
+    return () => { if (layer) { map.removeLayer(layer); layerRef.current = null; } };
+  }, [map]);
+
+  useEffect(() => {
+    layerRef.current?.setStyle({ color: borderColor });
+  }, [borderColor]);
+
+  return null;
 }
 
 export default function AedPage() {
   const { data: locations, loading } = useFetch('/api/aed');
   const [flyTo, setFlyTo] = useState(null);
-  const [theme, setTheme] = useState(
-    document.documentElement.getAttribute('data-theme') || 'dark'
-  );
+  const { theme } = useThemeContext();
 
-  // Nasłuchuj zmian motywu
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setTheme(document.documentElement.getAttribute('data-theme') || 'dark');
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    return () => observer.disconnect();
-  }, []);
-
-  const isDark = theme === 'dark' || theme === 'dusk';
-  const tileUrl = isDark
+  const tileUrl = theme === 'dark'
     ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
     : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+  const mapFilter = theme === 'dusk' ? 'brightness(0.7)' : 'none';
+  const borderColor = BORDER_COLOR[theme] ?? '#ffffff';
 
   const is247 = access => access.includes('24/7');
 
@@ -100,7 +100,7 @@ export default function AedPage() {
         </Card>
       </div>
 
-      <div className={styles.mapWrap}>
+      <div className={styles.mapWrap} style={{ filter: mapFilter }}>
         <MapContainer
           center={[50.2406, 19.1378]}
           zoom={14}
@@ -112,6 +112,7 @@ export default function AedPage() {
             attribution='&copy; <a href="https://carto.com/">CARTO</a>'
             maxZoom={19}
           />
+          <CityBorder borderColor={borderColor} />
           {flyTo && <FlyTo coords={flyTo} />}
           {locations?.map(loc => (
             <Marker key={loc.id} position={[loc.coordinates.lat, loc.coordinates.lng]} icon={aedIcon}>

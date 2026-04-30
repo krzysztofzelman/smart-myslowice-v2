@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useThemeContext } from '../ThemeContext.js';
 import styles from './Header.module.css';
+
+const THEME_LABEL = {
+  light: '☀️ Dzień',
+  dusk:  '🌅 Zmierzch',
+  dark:  '🌙 Noc',
+};
 
 const DAYS = ['Niedziela','Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota'];
 const MONTHS = ['stycznia','lutego','marca','kwietnia','maja','czerwca','lipca','sierpnia','września','października','listopada','grudnia'];
@@ -16,9 +23,10 @@ const OWM_ICONS = {
   '50d': '🌫️', '50n': '🌫️',
 };
 
-export default function Header({ themeLabel }) {
+export default function Header() {
   const [time, setTime] = useState(new Date());
   const [weather, setWeather] = useState(null);
+  const { theme, cycleTheme } = useThemeContext();
 
   // Zegar — aktualizuj co sekundę
   useEffect(() => {
@@ -55,7 +63,9 @@ export default function Header({ themeLabel }) {
       <div className={styles.inner}>
         <div className={styles.topRow}>
           <div className={styles.badge}>IoT · Live Data</div>
-          {themeLabel && <div className={styles.themePill}>{themeLabel}</div>}
+          <button className={styles.themePill} onClick={cycleTheme} title="Zmień motyw">
+            {THEME_LABEL[theme]}
+          </button>
         </div>
         <div className={styles.mainRow}>
           <div>
