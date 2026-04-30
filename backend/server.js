@@ -137,31 +137,19 @@ const toilets = [
 const ecoPoints = [
   {
     id: 1,
-    name: "PSZOK – Punkt Selektywnej Zbiórki",
-    address: "ul. Przemysłowa 1",
-    access: "Pon–Pt 8–16, Sob 9–13",
-    accepts: "Meble, AGD, elektronika, opony, baterie, farby, chemia",
+    name: "PSZOK Mysłowice Północ",
+    address: "ul. Karola Miarki 38, 41-400 Mysłowice",
+    hours: "Pon-Pt 12:00-20:00, Sob 8:00-16:00",
+    phone: "32 222 22 18",
+    accepts: "Meble, AGD, elektronika, opony, baterie, farby, chemia, gruz, tekstylia",
   },
   {
     id: 2,
-    name: "Zbiórka Baterii – Urząd Miasta",
-    address: "ul. Powstańców 1",
-    access: "Pon–Pt 7:30–17:00",
-    accepts: "Baterie",
-  },
-  {
-    id: 3,
-    name: "Zbiórka Baterii – Biblioteka",
-    address: "ul. Laryska 5",
-    access: "Pon–Pt 10–18",
-    accepts: "Baterie",
-  },
-  {
-    id: 4,
-    name: "Punkt Tekstyliów – Kaufland",
-    address: "ul. Bytomska (parking Kaufland)",
-    access: "24/7",
-    accepts: "Tekstylia, ubrania",
+    name: "PSZOK Mysłowice Południe",
+    address: "ul. Piaskowa, 41-400 Mysłowice",
+    hours: "Pon-Pt 8:00-16:00",
+    phone: "882 682 983",
+    accepts: "Meble, AGD, elektronika, opony, baterie, farby, chemia, gruz, tekstylia",
   },
 ];
 

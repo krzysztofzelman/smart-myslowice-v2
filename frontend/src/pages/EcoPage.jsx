@@ -18,10 +18,6 @@ export default function EcoPage() {
           <p className={styles.statNum}>{loading ? '…' : points?.length ?? 0}</p>
           <p className={styles.statLbl}>Punkty zbiórki</p>
         </Card>
-        <Card accent="var(--c-amber)">
-          <p className={styles.statNum}>{loading ? '…' : points?.filter(p => p.access.includes('24/7')).length ?? 0}</p>
-          <p className={styles.statLbl}>Dostępne 24/7</p>
-        </Card>
       </div>
 
       {loading && <p style={{ color: 'var(--c-muted)' }}>Ładowanie…</p>}
@@ -34,14 +30,17 @@ export default function EcoPage() {
               <div className={styles.info}>
                 <p className={styles.name}>♻️ {p.name}</p>
                 <p className={styles.addr}>📍 {p.address}</p>
+                {p.phone && (
+                  <p className={styles.addr}>📞 {p.phone}</p>
+                )}
                 {p.accepts && (
                   <p className={styles.accepts}>
                     <strong>Przyjmuje:</strong> {p.accepts}
                   </p>
                 )}
               </div>
-              <Badge variant={p.access.includes('24/7') ? 'green' : 'amber'}>
-                {p.access}
+              <Badge variant="amber">
+                {p.hours}
               </Badge>
             </div>
           </Card>
@@ -50,7 +49,7 @@ export default function EcoPage() {
 
       <Card>
         <p style={{ color: 'var(--c-muted)', fontSize: '0.88rem' }}>
-          💡 <strong style={{ color: 'var(--c-text)' }}>Dane wymagają weryfikacji</strong> z Urzędem Miasta Mysłowice. 📞 Infolinia PSZOK: 32 XXX XX XX
+          💡 Dane PSZOK zweryfikowane na podstawie informacji Urzędu Miasta Mysłowice.
         </p>
       </Card>
     </div>
