@@ -10,31 +10,36 @@ const QUALITY = {
   unknown: { label: 'Brak danych',variant: 'muted', color: 'rgba(255,255,255,0.25)' },
 };
 
-function Gauge({ pm25, quality }) {
-  const q = QUALITY[quality] ?? QUALITY.unknown;
-  const pct = pm25 !== null ? Math.min(pm25 / 75, 1) : 0;
-  const total = 101;
-  const offset = total - pct * total;
+const PM_BARS = [
+  { key: 'pm25', label: 'PM2.5', color: null },
+  { key: 'pm10', label: 'PM10',  color: '#3b82f6' },
+  { key: 'pm1',  label: 'PM1',   color: '#a855f7' },
+];
 
+function PmBars({ s, qColor }) {
   return (
-    <div className={styles.gaugeWrap}>
-      <svg width="100" height="62" viewBox="0 0 100 62">
-        <path d="M10,56 A40,40 0 0,1 90,56" stroke="rgba(255,255,255,0.1)" strokeWidth="10" fill="none" strokeLinecap="round" />
-        <path
-          d="M10,56 A40,40 0 0,1 90,56"
-          stroke={q.color}
-          strokeWidth="10"
-          fill="none"
-          strokeLinecap="round"
-          strokeDasharray={`${total} ${total}`}
-          strokeDashoffset={offset}
-          style={{ transition: 'stroke-dashoffset 1s ease, stroke 1s ease' }}
-        />
-        <text x="50" y="50" textAnchor="middle" fontSize="16" fontWeight="600" fill={q.color} fontFamily="DM Serif Display, serif">
-          {pm25 !== null ? pm25 : '--'}
-        </text>
-      </svg>
-      <span className={styles.gaugeUnit}>PM2.5 µg/m³</span>
+    <div className={styles.pmBars}>
+      {PM_BARS.map(({ key, label, color: fixed }) => {
+        const value = s[key] ?? null;
+        const color = value !== null ? (fixed ?? qColor) : 'rgba(255,255,255,0.25)';
+        const pct = value !== null ? Math.min(value / 75, 1) * 100 : 0;
+        return (
+          <div key={key} className={styles.pmBar}>
+            <div className={styles.pmBarHeader}>
+              <span className={styles.pmBarLabel}>{label}</span>
+              <span className={styles.pmBarValue} style={{ color }}>
+                {value !== null ? `${value} µg/m³` : '--'}
+              </span>
+            </div>
+            <div className={styles.pmBarTrack}>
+              <div
+                className={styles.pmBarFill}
+                style={{ '--bar-w': `${pct}%`, backgroundColor: color }}
+              />
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -43,6 +48,51 @@ function formatUpdated(dateStr) {
   if (!dateStr) return null;
   const d = new Date(dateStr.replace(' ', 'T'));
   return d.toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
+function SensorCard({ s }) {
+  const q = QUALITY[s.quality] ?? QUALITY.unknown;
+  const updated = formatUpdated(s.updatedAt);
+
+  return (
+    <Card accent={q.color}>
+      <div className={styles.sensorTop}>
+        <div>
+          <span className={styles.sensorName}>{s.name}</span>
+          {s.city && <p className={styles.sensorCity}>{s.city}</p>}
+          {s.address && <p className={styles.sensorAddr}>📍 {s.address}</p>}
+          <p className={styles.sourceTag}>{s.source === 'airly' ? 'Airly' : 'GIOŚ'}</p>
+        </div>
+        <Badge variant={q.variant}>{q.label}</Badge>
+      </div>
+
+      <PmBars s={s} qColor={q.color} />
+
+      <div className={styles.whoRow}>
+        <div className={styles.whoNormRow}>
+          <span className={styles.whoLabel}>PM2.5 — norma WHO: 15 µg/m³</span>
+          {s.pm25 !== null ? (
+            <span className={styles.whoStatus} style={{ color: s.pm25 <= 15 ? '#22d3a5' : '#ff3b4e' }}>
+              {s.pm25 <= 15 ? '✓ w normie' : `+${s.pm25 - 15} ponad normę`}
+            </span>
+          ) : (
+            <span className={styles.whoLabel}>Brak danych</span>
+          )}
+        </div>
+        <div className={styles.whoNormRow}>
+          <span className={styles.whoLabel}>PM10 — norma WHO: 45 µg/m³</span>
+          {s.pm10 !== null ? (
+            <span className={styles.whoStatus} style={{ color: s.pm10 <= 45 ? '#22d3a5' : '#ff3b4e' }}>
+              {s.pm10 <= 45 ? '✓ w normie' : `+${s.pm10 - 45} ponad normę`}
+            </span>
+          ) : (
+            <span className={styles.whoLabel}>Brak danych</span>
+          )}
+        </div>
+        {updated && <span className={styles.updatedAt}>{updated}</span>}
+      </div>
+    </Card>
+  );
 }
 
 export default function AirPage() {
@@ -89,49 +139,7 @@ export default function AirPage() {
       {error   && <p style={{ color: 'var(--c-red)' }}>Błąd: {error}</p>}
 
       <div className={styles.grid}>
-        {validPm25.map(s => {
-          const q = QUALITY[s.quality] ?? QUALITY.unknown;
-          const updated = formatUpdated(s.updatedAt);
-          return (
-            <Card key={s.id} accent={q.color}>
-              <div className={styles.sensorTop}>
-                <div>
-                  <span className={styles.sensorName}>{s.name}</span>
-                  {s.city && <p className={styles.sensorCity}>{s.city}</p>}
-                  {s.address && <p className={styles.sensorAddr}>📍 {s.address}</p>}
-                  <p className={styles.sourceTag}>{s.source === 'airly' ? 'Airly' : 'GIOŚ'}</p>
-                </div>
-                <Badge variant={q.variant}>{q.label}</Badge>
-              </div>
-
-              <Gauge pm25={s.pm25} quality={s.quality} />
-
-              {s.pm10 !== null && (
-                <p className={styles.pm10Row}>
-                  <span className={styles.pm10Label}>PM10</span>
-                  <span className={styles.pm10Value}>{s.pm10} µg/m³</span>
-                </p>
-              )}
-
-              <div className={styles.whoRow}>
-                {s.pm25 !== null ? (
-                  <>
-                    <span className={styles.whoLabel}>Norma WHO: 15 µg/m³</span>
-                    <span
-                      className={styles.whoStatus}
-                      style={{ color: s.pm25 <= 15 ? '#22d3a5' : s.pm25 <= 25 ? '#f59e0b' : '#ff3b4e' }}
-                    >
-                      {s.pm25 <= 15 ? '✓ w normie' : `+${s.pm25 - 15} ponad normę`}
-                    </span>
-                  </>
-                ) : (
-                  <span className={styles.whoLabel}>Brak aktualnych pomiarów</span>
-                )}
-                {updated && <span className={styles.updatedAt}>{updated}</span>}
-              </div>
-            </Card>
-          );
-        })}
+        {validPm25.map(s => <SensorCard key={s.id} s={s} />)}
       </div>
 
       <Card>

@@ -55,40 +55,58 @@
 .sensorAddr { font-size: 0.78rem; color: var(--c-muted); margin: 0.1rem 0 0; }
 .sourceTag { font-size: 0.68rem; color: var(--c-muted); margin: 0.2rem 0 0; text-transform: uppercase; letter-spacing: 0.05em; }
 
-/* Gauge */
-.gaugeWrap {
+/* PM progress bars */
+.pmBars {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  margin: 0.5rem 0 0.3rem;
+  gap: 0.55rem;
+  margin: 0.6rem 0 0.5rem;
 }
 
-.gaugeUnit {
-  font-size: 0.72rem;
-  color: var(--c-muted);
-  margin-top: -4px;
-}
-
-/* PM10 */
-.pm10Row {
+.pmBarHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 0.2rem 0 0;
+  margin-bottom: 0.25rem;
   font-size: 0.78rem;
 }
-.pm10Label { color: var(--c-muted); }
-.pm10Value { font-weight: 600; color: var(--c-text); }
+
+.pmBarLabel { color: var(--c-muted); }
+.pmBarValue { font-weight: 600; }
+
+.pmBarTrack {
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.pmBarFill {
+  height: 100%;
+  border-radius: 4px;
+  animation: barGrow 1s ease both;
+}
+
+@keyframes barGrow {
+  from { width: 0 }
+  to   { width: var(--bar-w, 0%) }
+}
 
 /* WHO norma */
 .whoRow {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.25rem;
   padding-top: 0.6rem;
   border-top: 1px solid var(--c-border);
   margin-top: 0.2rem;
+}
+
+.whoNormRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .whoLabel {
@@ -104,6 +122,6 @@
 .updatedAt {
   font-size: 0.68rem;
   color: var(--c-muted);
-  margin-left: auto;
-  padding-left: 0.4rem;
+  align-self: flex-end;
+  padding-top: 0.1rem;
 }

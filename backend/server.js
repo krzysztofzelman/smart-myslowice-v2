@@ -404,6 +404,7 @@ async function fetchAirlyData() {
         city: inst.address.city ?? '',
         pm25: get('PM25'),
         pm10: get('PM10'),
+        pm1: get('PM1'),
         quality: AIRLY_LEVEL[index?.level] ?? pm25ToQuality(get('PM25')),
         updatedAt: m.current?.tillDateTime?.replace('T', ' ').slice(0, 16) ?? null,
         source: 'airly',
