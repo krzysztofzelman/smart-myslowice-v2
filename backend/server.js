@@ -10,121 +10,53 @@ const PORT = 3001;
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
-// ── AED data ──────────────────────────────────────────────────────────────────
-const aedLocations = [
-  {
-    id: 1,
-    name: "Mysłowickie Centrum Zdrowia – Szpital",
-    address: "ul. Mikołowska 1, 41-400 Mysłowice",
-    coordinates: { lat: 50.2396846, lng: 19.1373742 },
-    access: "24/7",
-    description: "Defibrylator przy Izbie Przyjęć szpitala",
-  },
-  {
-    id: 2,
-    name: "Urząd Miasta Mysłowice",
-    address: "ul. Powstańców 1, 41-400 Mysłowice",
-    coordinates: { lat: 50.2409042, lng: 19.1415714 },
-    access: "Pon–Pt 7:30–17:00",
-    description: "Defibrylator w holu głównym urzędu",
-  },
-  {
-    id: 3,
-    name: "MOSiR – Hala Sportowa",
-    address: "ul. Bończyka 32z, 41-400 Mysłowice",
-    coordinates: { lat: 50.2459527, lng: 19.1143236 },
-    access: "Pon–Pt 7:00–15:00",
-    description: "Defibrylator przy recepcji hali sportowej",
-  },
-  {
-    id: 4,
-    name: "Straż Miejska",
-    address: "ul. Strażacka 7, 41-400 Mysłowice",
-    coordinates: { lat: 50.2400854, lng: 19.1428678 },
-    access: "Codziennie 6:00–22:00",
-    description: "Defibrylator w siedzibie Straży Miejskiej",
-  },
-  {
-    id: 5,
-    name: "Biblioteka Miejska – Filia Brzezinka",
-    address: "ul. Laryska 5, 41-404 Mysłowice",
-    coordinates: { lat: 50.2039125, lng: 19.1571627 },
-    access: "Pon–Pt 10:00–18:00",
-    description: "Defibrylator w holu biblioteki",
-  },
-  {
-    id: 6,
-    name: "Dworzec PKP Mysłowice",
-    address: "Dworzec PKP, 41-400 Mysłowice",
-    coordinates: { lat: 50.237775, lng: 19.1406167 },
-    access: "24/7",
-    description: "Defibrylator na głównym holu dworca",
-  },
-  {
-    id: 7,
-    name: "Szpital nr 2 im. dr. T. Boczonia",
-    address: "ul. Bytomska 41, 41-400 Mysłowice",
-    coordinates: { lat: 50.2471739, lng: 19.1330167 },
-    access: "24/7",
-    description: "Defibrylator przy Izbie Przyjęć i SOR",
-  },
-  {
-    id: 8,
-    name: "OSP Janów",
-    address: "ul. Bolesława Chrobrego 11, 41-406 Mysłowice",
-    coordinates: { lat: 50.2396024, lng: 19.1145707 },
-    access: "24/7",
-    description: "Na zewnątrz budynku OSP Janów",
-  },
-  {
-    id: 9,
-    name: "Bank ING",
-    address: "ul. Powstańców 1, 41-400 Mysłowice",
-    coordinates: { lat: 50.242107, lng: 19.1418073 },
-    access: "Brak danych",
-    description: "Na wyposażeniu banku ING",
-  },
-  {
-    id: 10,
-    name: "OSP Kosztowy",
-    address: "ul. Górnicza, Mysłowice-Kosztowy",
-    coordinates: { lat: 50.1889724, lng: 19.151563 },
-    access: "24/7",
-    description: "Na zewnętrznej ścianie remizy, zielona kapsuła Rotaid",
-  },
-  {
-    id: 11,
-    name: "Przedszkole nr 6",
-    address: "Mysłowice",
-    coordinates: { lat: 50.2157209, lng: 19.1569921 },
-    access: "24/7",
-    description: "Kapsuła przy wejściu frontowym budynku",
-  },
-  {
-    id: 12,
-    name: "PSP Mysłowice – mobilny AED",
-    address: "Mysłowice",
-    coordinates: { lat: 50.2337007, lng: 19.1188436 },
-    access: "24/7",
-    description: "Mobilny AED na samochodzie ratowniczym PSP",
-  },
-  {
-    id: 13,
-    name: "Lodowisko / Boiska siatkówki",
-    address: "Mysłowice",
-    coordinates: { lat: 50.2261356, lng: 19.1441696 },
-    access: "Pon–Sob 9:00–20:00",
-    description: "Na drewnianym domku, po lewej stronie od wejścia",
-  },
-  {
-    id: 14,
-    name: "Przychodnia Bracka – Unia Bracka",
-    address: "Mysłowice",
-    coordinates: { lat: 50.1878307, lng: 19.1046811 },
-    access: "W godzinach otwarcia",
-    description: "W Przychodni Brackiej, gabinet nr 3",
-  },
-];
+// ── AED – Overpass API (OpenStreetMap) ───────────────────────────────────────
+const OVERPASS_URL   = 'https://overpass-api.de/api/interpreter';
+const OVERPASS_QUERY = '[out:json];node["emergency"="defibrillator"](50.15,19.05,50.30,19.25);out body;';
+const AED_TTL        = 6 * 60 * 60 * 1000;
+let aedCache   = null;
+let aedCacheTs = 0;
+
+const ACCESS_MAP = {
+  yes: 'Publicznie dostępny', no: 'Niedostępny publicznie',
+  private: 'Prywatny', customers: 'Dla klientów', permissive: 'Ogólnodostępny',
+};
+
+function overpassNodeToAed(node) {
+  const t = node.tags ?? {};
+  const name    = t.name || t.operator || 'Defibrylator AED';
+  const street  = [t['addr:street'], t['addr:housenumber']].filter(Boolean).join(' ');
+  const city    = t['addr:city'] || t['addr:town'] || '';
+  const address = [street, city].filter(Boolean).join(', ');
+  let access = 'Brak danych';
+  if (t.opening_hours) {
+    access = t.opening_hours;
+  } else if (t.access) {
+    access = ACCESS_MAP[t.access] ?? t.access;
+  }
+  return {
+    id:          node.id,
+    name,
+    address,
+    coordinates: { lat: node.lat, lng: node.lon },
+    access,
+  };
+}
+
+async function fetchAedData() {
+  if (aedCache && Date.now() - aedCacheTs < AED_TTL) return aedCache;
+  const r = await fetch(OVERPASS_URL, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body:    `data=${encodeURIComponent(OVERPASS_QUERY)}`,
+    signal:  AbortSignal.timeout(15000),
+  });
+  if (!r.ok) throw new Error(`Overpass → ${r.status}`);
+  const json = await r.json();
+  aedCache   = json.elements.map(overpassNodeToAed);
+  aedCacheTs = Date.now();
+  return aedCache;
+}
 
 // ── Static data ───────────────────────────────────────────────────────────────
 const toilets = [
@@ -553,7 +485,14 @@ async function fetchVehicleData() {
 }
 
 // ── Routes ────────────────────────────────────────────────────────────────────
-app.get("/api/aed", (_req, res) => res.json(aedLocations));
+app.get('/api/aed', async (_req, res) => {
+  try {
+    res.json(await fetchAedData());
+  } catch (err) {
+    if (aedCache) return res.json(aedCache);
+    res.status(502).json({ error: err.message });
+  }
+});
 app.get("/api/toilets", (_req, res) => res.json(toilets));
 app.get("/api/eco", (_req, res) => res.json(ecoPoints));
 app.get('/api/air', async (_req, res) => {

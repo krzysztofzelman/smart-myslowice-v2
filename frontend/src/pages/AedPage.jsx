@@ -59,9 +59,12 @@ function CityBorder({ borderColor }) {
   return null;
 }
 
+const PREVIEW = 5;
+
 export default function AedPage() {
   const { data: locations, loading } = useFetch('/api/aed');
   const [flyTo, setFlyTo] = useState(null);
+  const [expanded, setExpanded] = useState(false);
   const { theme } = useThemeContext();
 
   const tileUrl = theme === 'dark'
@@ -138,9 +141,9 @@ export default function AedPage() {
 
       <div className={styles.listWrap}>
         <h2 className={styles.listTitle}>Wszystkie lokalizacje</h2>
+        {loading && <p style={{ color: 'var(--c-muted)' }}>Ładowanie…</p>}
         <div className={styles.list}>
-          {loading && <p style={{ color: 'var(--c-muted)' }}>Ładowanie…</p>}
-          {locations?.map(loc => (
+          {locations?.slice(0, PREVIEW).map(loc => (
             <button
               key={loc.id}
               className={styles.listItem}
@@ -156,6 +159,40 @@ export default function AedPage() {
             </button>
           ))}
         </div>
+        {locations?.length > PREVIEW && (
+          <>
+            <div
+              className={styles.listExtra}
+              style={{ maxHeight: expanded ? `${(locations.length - PREVIEW) * 90}px` : '0' }}
+            >
+              <div className={styles.list} style={{ paddingTop: '0.4rem' }}>
+                {locations.slice(PREVIEW).map(loc => (
+                  <button
+                    key={loc.id}
+                    className={styles.listItem}
+                    onClick={() => setFlyTo([loc.coordinates.lat, loc.coordinates.lng])}
+                  >
+                    <div className={styles.listMain}>
+                      <span className={styles.listName}>{loc.name}</span>
+                      <span className={styles.listAddr}>📍 {loc.address}</span>
+                    </div>
+                    <Badge variant={is247(loc.access) ? 'green' : 'amber'}>
+                      {loc.access}
+                    </Badge>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <button
+              className={styles.toggleBtn}
+              onClick={() => setExpanded(e => !e)}
+            >
+              {expanded
+                ? '▲ Zwiń'
+                : `▼ Pokaż wszystkie (${locations.length})`}
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
