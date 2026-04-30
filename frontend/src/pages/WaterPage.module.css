@@ -62,6 +62,30 @@
 
 .list { display: flex; flex-direction: column; gap: 0.4rem; }
 
+.listExtra {
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+
+.toggleBtn {
+  margin-top: 0.6rem;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  background: rgba(34, 211, 165, 0.08);
+  border: 1px solid rgba(34, 211, 165, 0.25);
+  border-radius: 10px;
+  color: var(--c-green);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+}
+.toggleBtn:hover {
+  background: rgba(34, 211, 165, 0.16);
+  border-color: rgba(34, 211, 165, 0.45);
+}
+
 .listItem {
   display: flex;
   align-items: center;

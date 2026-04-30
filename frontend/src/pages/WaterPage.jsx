@@ -92,12 +92,15 @@ const STATUS_BADGE = { safe: 'green',    warning: 'amber',         danger: 'red'
 export default function WaterPage() {
   const { data: stations, loading, error } = useFetch('/api/water-level');
   const [flyTo, setFlyTo] = useState(null);
+  const [expanded, setExpanded] = useState(false);
   const { theme } = useThemeContext();
+
+  const PREVIEW = 5;
 
   const tileUrl  = theme === 'dark'
     ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
     : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-  const mapFilter = theme === 'dusk' ? 'brightness(0.7)' : 'none';;
+  const mapFilter = theme === 'dusk' ? 'brightness(0.7)' : 'none';
 
   const borderColor = BORDER_COLOR[theme] ?? '#ffffff';
 
@@ -201,7 +204,7 @@ export default function WaterPage() {
         {loading && <p className={styles.hint}>Ładowanie danych IMGW…</p>}
         {error   && <p className={styles.err}>Błąd pobierania: {error}</p>}
         <div className={styles.list}>
-          {stations?.map(s => (
+          {stations?.slice(0, PREVIEW).map(s => (
             <button
               key={s.id}
               className={styles.listItem}
@@ -233,6 +236,56 @@ export default function WaterPage() {
             </button>
           ))}
         </div>
+        {stations?.length > PREVIEW && (
+          <>
+            <div
+              className={styles.listExtra}
+              style={{ maxHeight: expanded ? `${(stations.length - PREVIEW) * 90}px` : '0' }}
+            >
+              <div className={styles.list} style={{ paddingTop: '0.4rem' }}>
+                {stations.slice(PREVIEW).map(s => (
+                  <button
+                    key={s.id}
+                    className={styles.listItem}
+                    onClick={() => s.coordinates && setFlyTo(s.coordinates)}
+                    style={{ cursor: s.coordinates ? 'pointer' : 'default' }}
+                  >
+                    <div className={styles.listMain}>
+                      <span className={styles.listName}>
+                        {s.name}
+                        <span className={styles.listRiver}>{riverLabel(s.river)}</span>
+                      </span>
+                      {s.measuredAt && (
+                        <span className={styles.listAddr}>📅 {s.measuredAt}</span>
+                      )}
+                    </div>
+                    <div className={styles.listRight}>
+                      {s.level !== null && (
+                        <span
+                          className={styles.levelVal}
+                          style={{ color: STATUS_COLOR[s.status] }}
+                        >
+                          {s.level} cm
+                        </span>
+                      )}
+                      <Badge variant={STATUS_BADGE[s.status] || 'muted'}>
+                        {STATUS_LABEL[s.status] || 'Brak danych'}
+                      </Badge>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <button
+              className={styles.toggleBtn}
+              onClick={() => setExpanded(e => !e)}
+            >
+              {expanded
+                ? '▲ Zwiń'
+                : `▼ Pokaż wszystkie (${stations.length})`}
+            </button>
+          </>
+        )}
         <p className={styles.source}>
           Źródło: IMGW · danepubliczne.imgw.pl · dane odświeżane co 15 min
         </p>
