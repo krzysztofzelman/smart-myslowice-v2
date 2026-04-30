@@ -493,14 +493,20 @@ async function fetchTransitStatic() {
   }
 
   const tripHeadsigns = {};
+  const tripRoute = {};
   const tripsEntry = zip.getEntry('trips.txt');
   if (tripsEntry) {
     parseCsv(tripsEntry.getData().toString('utf8')).forEach(r => {
-      if (r.trip_id && r.trip_headsign) tripHeadsigns[r.trip_id] = r.trip_headsign;
+      if (!r.trip_id) return;
+      // static trip_id has "XXXX:" prefix; RT feed omits it — strip so keys match
+      const colonIdx = r.trip_id.indexOf(':');
+      const key = colonIdx >= 0 ? r.trip_id.slice(colonIdx + 1) : r.trip_id;
+      if (r.trip_headsign) tripHeadsigns[key] = r.trip_headsign;
+      if (r.route_id) tripRoute[key] = r.route_id;
     });
   }
 
-  transitStaticCache = { stops, routeTypes, routeNames, tripHeadsigns };
+  transitStaticCache = { stops, routeTypes, routeNames, tripHeadsigns, tripRoute };
   transitStaticTs = Date.now();
   return transitStaticCache;
 }
@@ -510,21 +516,23 @@ async function fetchVehicleData() {
 
   const [res, staticData] = await Promise.all([
     fetch(VEHICLES_URL, { signal: AbortSignal.timeout(8000) }),
-    fetchTransitStatic().catch(() => ({ routeTypes: {}, routeNames: {}, tripHeadsigns: {} })),
+    fetchTransitStatic().catch(() => ({ routeTypes: {}, routeNames: {}, tripHeadsigns: {}, tripRoute: {} })),
   ]);
   if (!res.ok) throw new Error(`GTFS-RT → ${res.status}`);
 
   const buf = await res.arrayBuffer();
   const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(new Uint8Array(buf));
-  const { routeTypes, routeNames, tripHeadsigns } = staticData;
+  const { routeTypes, routeNames, tripHeadsigns, tripRoute } = staticData;
 
   const vehicles = [];
   for (const entity of feed.entity) {
     if (!entity.vehicle?.position) continue;
     const { latitude: lat, longitude: lon } = entity.vehicle.position;
     if (!inBbox(MYSLOWICE_BBOX, lat, lon)) continue;
-    const routeId = entity.vehicle.trip?.routeId || entity.id.split('_')[0] || '?';
     const tripId  = entity.vehicle.trip?.tripId  || null;
+    const routeId = entity.vehicle.trip?.routeId
+      || (tripId && tripRoute[tripId])
+      || '?';
     vehicles.push({
       id: entity.id,
       lat,
