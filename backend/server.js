@@ -17,6 +17,48 @@ const AED_TTL        = 6 * 60 * 60 * 1000;
 let aedCache   = null;
 let aedCacheTs = 0;
 
+const NOMINATIM_BOUNDARY_URL =
+  'https://nominatim.openstreetmap.org/search?q=Mys%C5%82owice%2CPoland&polygon_geojson=1&format=json&limit=1';
+let cityBoundary = null;
+
+function raycastRing(ring, lat, lng) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i];
+    const [xj, yj] = ring[j];
+    if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
+function pointInPolygon(lat, lng, geojson) {
+  const { type, coordinates } = geojson;
+  if (type === 'Polygon') return raycastRing(coordinates[0], lat, lng);
+  if (type === 'MultiPolygon') return coordinates.some(poly => raycastRing(poly[0], lat, lng));
+  return true;
+}
+
+async function fetchCityBoundary() {
+  if (cityBoundary) return cityBoundary;
+  try {
+    const r = await fetch(NOMINATIM_BOUNDARY_URL, {
+      headers: { 'User-Agent': 'smart-myslowice/1.0' },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!r.ok) throw new Error(`Nominatim → ${r.status}`);
+    const results = await r.json();
+    if (!results.length || !results[0].geojson) throw new Error('Brak geojson w odpowiedzi');
+    cityBoundary = results[0].geojson;
+    console.log(`[AED] Granica Mysłowic załadowana (${cityBoundary.type})`);
+    return cityBoundary;
+  } catch (err) {
+    console.warn(`[AED] Nie można pobrać granicy Mysłowic: ${err.message} — filtrowanie wyłączone`);
+    return null;
+  }
+}
+
 const ACCESS_MAP = {
   yes: 'Publicznie dostępny', no: 'Niedostępny publicznie',
   private: 'Prywatny', customers: 'Dla klientów', permissive: 'Ogólnodostępny',
@@ -45,15 +87,24 @@ function overpassNodeToAed(node) {
 
 async function fetchAedData() {
   if (aedCache && Date.now() - aedCacheTs < AED_TTL) return aedCache;
-  const r = await fetch(OVERPASS_URL, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body:    `data=${encodeURIComponent(OVERPASS_QUERY)}`,
-    signal:  AbortSignal.timeout(15000),
-  });
+  const [r, boundary] = await Promise.all([
+    fetch(OVERPASS_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body:    `data=${encodeURIComponent(OVERPASS_QUERY)}`,
+      signal:  AbortSignal.timeout(15000),
+    }),
+    fetchCityBoundary(),
+  ]);
   if (!r.ok) throw new Error(`Overpass → ${r.status}`);
   const json = await r.json();
-  aedCache   = json.elements.map(overpassNodeToAed);
+  const all  = json.elements.map(overpassNodeToAed);
+  if (boundary) {
+    aedCache = all.filter(aed => pointInPolygon(aed.coordinates.lat, aed.coordinates.lng, boundary));
+  } else {
+    console.warn('[AED] Brak granicy — zwracam wszystkie AED bez filtrowania');
+    aedCache = all;
+  }
   aedCacheTs = Date.now();
   return aedCache;
 }
@@ -565,6 +616,7 @@ app.get("/api/health", (_req, res) =>
   res.json({ ok: true, ts: new Date().toISOString() }),
 );
 
-app.listen(PORT, () =>
-  console.log(`🚀 Backend running on http://localhost:${PORT}`),
-);
+app.listen(PORT, () => {
+  console.log(`🚀 Backend running on http://localhost:${PORT}`);
+  fetchCityBoundary();
+});
