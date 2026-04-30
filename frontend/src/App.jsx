@@ -18,7 +18,7 @@ const TABS = [
   { id: 'toilets', label: 'Toalety',        icon: '🚻' },
   { id: 'eco',     label: 'Eko-punkty',     icon: '♻️' },
   { id: 'water',   label: 'Stan Wód',       icon: '💧' },
-  { id: 'transit', label: 'Transport',      icon: '🚌' },
+  // { id: 'transit', label: 'Transport',      icon: '🚌' },
 ];
 
 const PAGE = {
