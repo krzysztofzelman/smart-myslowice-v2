@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import fetch from "node-fetch";
@@ -6,6 +7,26 @@ import AdmZip from "adm-zip";
 
 const app = express();
 const PORT = 3001;
+
+// ── Walidacja zmiennych środowiskowych ────────────────────────────────────────
+const REQUIRED_ENV = ["OWM_API_KEY"];
+const MISSING_ENV = REQUIRED_ENV.filter(key => !process.env[key] || process.env[key].trim() === "");
+if (MISSING_ENV.length > 0) {
+  console.error(
+    `\n❌ Brak wymaganych zmiennych środowiskowych: ${MISSING_ENV.join(", ")}`
+  );
+  console.error(
+    `   Skopiuj backend/.env.example jako backend/.env i uzupełnij brakujące wartości.\n`
+  );
+  process.exit(1);
+}
+
+// Ostrzeżenie o brakujących opcjonalnych kluczach
+if (!process.env.AIRLY_API_KEY || process.env.AIRLY_API_KEY.trim() === "") {
+  console.warn(
+    "⚠️  AIRLY_API_KEY nie skonfigurowane – dane Airly będą niedostępne."
+  );
+}
 
 app.use(cors({ origin: "*" }));
 app.use(express.json());
@@ -592,9 +613,16 @@ app.get('/api/air', async (_req, res) => {
 app.get("/api/weather", async (_req, res) => {
   try {
     const apiKey = process.env.OWM_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: "Serwer nie ma skonfigurowanego klucza API pogody." });
+    }
     const url = `https://api.openweathermap.org/data/2.5/weather?q=Myslowice&units=metric&lang=pl&appid=${apiKey}`;
     const response = await fetch(url);
-    if (!response.ok) throw new Error(`OWM error ${response.status}`);
+    if (!response.ok) {
+      // Nie zwracamy klucza API ani szczegółów błędu OWM w odpowiedzi
+      console.error(`[weather] OWM error ${response.status}`);
+      return res.status(502).json({ error: "Nie udało się pobrać danych pogodowych." });
+    }
     const data = await response.json();
     res.json({
       temp: Math.round(data.main.temp),
@@ -607,7 +635,8 @@ app.get("/api/weather", async (_req, res) => {
       sunset: data.sys.sunset, // unix timestamp UTC
     });
   } catch (err) {
-    res.status(502).json({ error: err.message });
+    console.error(`[weather] Błąd sieciowy: ${err.message}`);
+    res.status(502).json({ error: "Nie udało się pobrać danych pogodowych." });
   }
 });
 
