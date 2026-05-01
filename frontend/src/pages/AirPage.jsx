@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useFetch } from '../hooks/useFetch.js';
 import Card from '../components/Card.jsx';
 import Badge from '../components/Badge.jsx';
+import AirHistoryModal from '../components/AirHistoryModal.jsx';
 import styles from './AirPage.module.css';
 
 const QUALITY = {
@@ -49,18 +51,26 @@ function formatUpdated(dateStr) {
   return d.toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
-function SensorCard({ s }) {
+function SensorCard({ s, onSelect, onGiosClick }) {
   const q = QUALITY[s.quality] ?? QUALITY.unknown;
   const updated = formatUpdated(s.updatedAt);
+  const isAirly = s.source === 'airly';
 
   return (
-    <Card accent={q.color}>
+    <Card
+      accent={q.color}
+      onClick={isAirly ? () => onSelect(s) : onGiosClick}
+      style={{ cursor: 'pointer' }}
+      title={isAirly ? undefined : 'Dane historyczne niedostępne dla stacji GIOŚ'}
+    >
       <div className={styles.sensorTop}>
         <div>
           <span className={styles.sensorName}>{s.name}</span>
           {s.city && <p className={styles.sensorCity}>{s.city}</p>}
           {s.address && <p className={styles.sensorAddr}>📍 {s.address}</p>}
-          <p className={styles.sourceTag}>{s.source === 'airly' ? 'Airly' : 'GIOŚ'}</p>
+          <p className={styles.sourceTag}>
+            {isAirly ? 'Airly — kliknij po wykres' : 'GIOŚ'}
+          </p>
         </div>
         <Badge variant={q.variant}>{q.label}</Badge>
       </div>
@@ -96,6 +106,13 @@ function SensorCard({ s }) {
 
 export default function AirPage() {
   const { data: sensors, loading, error } = useFetch('/api/air');
+  const [selectedStation, setSelectedStation] = useState(null);
+  const [toastMessage, setToastMessage] = useState(null);
+
+  function showToast(msg) {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  }
 
   const validPm25 = sensors?.filter(s => s.pm25 !== null) ?? [];
   const avgPm25 = validPm25.length
@@ -143,8 +160,23 @@ export default function AirPage() {
       {error   && <p style={{ color: 'var(--c-red)' }}>Błąd: {error}</p>}
 
       <div className={styles.grid}>
-        {validPm25.map(s => <SensorCard key={s.id} s={s} />)}
+        {validPm25.map(s => (
+          <SensorCard
+            key={s.id}
+            s={s}
+            onSelect={setSelectedStation}
+            onGiosClick={() => showToast('📊 Dane historyczne niedostępne dla stacji GIOŚ')}
+          />
+        ))}
       </div>
+
+      {selectedStation && (
+        <AirHistoryModal station={selectedStation} onClose={() => setSelectedStation(null)} />
+      )}
+
+      {toastMessage && (
+        <div className={styles.toast}>{toastMessage}</div>
+      )}
 
       <Card>
         <p style={{ color: 'var(--c-muted)', fontSize: '0.88rem' }}>

@@ -607,6 +607,28 @@ app.get('/api/transit-stops', async (_req, res) => {
   }
 });
 
+app.get('/api/air-history', async (req, res) => {
+  const { installationId } = req.query;
+  if (!installationId) return res.status(400).json({ error: 'Brak installationId' });
+  try {
+    const data = await airlyFetch(`/measurements/installation?installationId=${installationId}`);
+    const history = (data.history ?? []).map((entry) => {
+      const get = (name) => {
+        const v = (entry.values ?? []).find((x) => x.name === name)?.value;
+        return v != null ? Math.round(v) : null;
+      };
+      return {
+        time: entry.tillDateTime ?? entry.fromDateTime ?? null,
+        pm25: get('PM25'),
+        pm10: get('PM10'),
+      };
+    });
+    res.json(history);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
 app.get("/api/health", (_req, res) =>
   res.json({ ok: true, ts: new Date().toISOString() }),
 );
