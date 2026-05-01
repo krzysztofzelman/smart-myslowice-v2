@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useFetch } from '../hooks/useFetch.js';
+import { OWM_ICONS } from '../constants.js';
 import Card from '../components/Card.jsx';
 import styles from './WeatherPage.module.css';
 
@@ -21,18 +22,6 @@ function formatDate(d) {
 function formatTime(d) {
   return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
-
-const OWM_ICONS = {
-  '01d': '☀️', '01n': '🌙',
-  '02d': '⛅', '02n': '⛅',
-  '03d': '☁️', '03n': '☁️',
-  '04d': '☁️', '04n': '☁️',
-  '09d': '🌧️', '09n': '🌧️',
-  '10d': '🌦️', '10n': '🌦️',
-  '11d': '⛈️', '11n': '⛈️',
-  '13d': '❄️', '13n': '❄️',
-  '50d': '🌫️', '50n': '🌫️',
-};
 
 export default function WeatherPage() {
   const { data: weather, loading, error } = useFetch('/api/weather');

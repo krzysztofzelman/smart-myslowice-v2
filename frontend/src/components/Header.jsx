@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useThemeContext } from '../ThemeContext.js';
+import { OWM_ICONS } from '../constants.js';
 import styles from './Header.module.css';
 
 const THEME_LABEL = {
@@ -10,18 +11,6 @@ const THEME_LABEL = {
 
 const DAYS = ['Niedziela','Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota'];
 const MONTHS = ['stycznia','lutego','marca','kwietnia','maja','czerwca','lipca','sierpnia','września','października','listopada','grudnia'];
-
-const OWM_ICONS = {
-  '01d': '☀️', '01n': '🌙',
-  '02d': '⛅', '02n': '⛅',
-  '03d': '☁️', '03n': '☁️',
-  '04d': '☁️', '04n': '☁️',
-  '09d': '🌧️', '09n': '🌧️',
-  '10d': '🌦️', '10n': '🌦️',
-  '11d': '⛈️', '11n': '⛈️',
-  '13d': '❄️', '13n': '❄️',
-  '50d': '🌫️', '50n': '🌫️',
-};
 
 export default function Header() {
   const [time, setTime] = useState(new Date());

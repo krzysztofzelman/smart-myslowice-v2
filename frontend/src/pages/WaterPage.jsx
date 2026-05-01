@@ -45,12 +45,14 @@ function CityBorder({ borderColor }) {
   const layerRef = useRef(null);
 
   useEffect(() => {
+    let cancelled = false;
     let layer;
     const url = 'https://nominatim.openstreetmap.org/search?' +
       new URLSearchParams({ q: 'Mysłowice, Poland', polygon_geojson: '1', format: 'json', limit: '1' });
     fetch(url)
       .then(r => r.json())
       .then(data => {
+        if (cancelled) return;
         const geo = data?.[0]?.geojson;
         if (!geo) return;
         layer = L.geoJSON({ type: 'Feature', geometry: geo }, {
@@ -59,7 +61,10 @@ function CityBorder({ borderColor }) {
         layerRef.current = layer;
       })
       .catch(err => console.warn('[CityBorder]', err));
-    return () => { if (layer) { map.removeLayer(layer); layerRef.current = null; } };
+    return () => {
+      cancelled = true;
+      if (layer) { map.removeLayer(layer); layerRef.current = null; }
+    };
   }, [map]);
 
   useEffect(() => {
@@ -84,6 +89,8 @@ const ALERT_CFG = {
   'no-data': { label: 'Brak danych',         sub: 'Nie udało się pobrać danych ze stacji pomiarowych.',              icon: '❓', color: 'var(--c-muted)', bg: 'rgba(107,114,128,0.08)', border: 'rgba(107,114,128,0.20)', badge: 'muted' },
 };
 
+const PREVIEW = 5;
+
 const riverLabel = (r) => (!r || r === '-') ? 'nieznana rzeka' : r;
 
 const STATUS_LABEL = { safe: 'Normalny', warning: 'Ostrzegawczy', danger: 'Alarmowy', unknown: 'Brak danych' };
@@ -94,8 +101,6 @@ export default function WaterPage() {
   const [flyTo, setFlyTo] = useState(null);
   const [expanded, setExpanded] = useState(false);
   const { theme } = useThemeContext();
-
-  const PREVIEW = 5;
 
   const tileUrl  = theme === 'dark'
     ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'

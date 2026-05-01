@@ -7,7 +7,7 @@ import WeatherPage from './pages/WeatherPage.jsx';
 import ToiletsPage from './pages/ToiletsPage.jsx';
 import EcoPage from './pages/EcoPage.jsx';
 import WaterPage from './pages/WaterPage.jsx';
-import TransitPage from './pages/TransitPage.jsx';
+// import TransitPage from './pages/TransitPage.jsx';
 import { useTheme } from './hooks/useTheme.js';
 import { ThemeContext } from './ThemeContext.js';
 import styles from './App.module.css';
@@ -29,7 +29,7 @@ const PAGE = {
   toilets: <ToiletsPage />,
   eco:     <EcoPage />,
   water:   <WaterPage />,
-  transit: <TransitPage />,
+  // transit: <TransitPage />,
 };
 
 const THEME_CYCLE = ['light', 'dusk', 'dark'];

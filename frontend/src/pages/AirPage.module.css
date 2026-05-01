@@ -63,6 +63,8 @@
   margin: 0.6rem 0 0.5rem;
 }
 
+.pmBar { display: flex; flex-direction: column; }
+
 .pmBarHeader {
   display: flex;
   justify-content: space-between;
