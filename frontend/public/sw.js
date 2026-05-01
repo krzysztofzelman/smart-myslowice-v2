@@ -1,4 +1,4 @@
-const CACHE = 'smart-msw-v1';
+const CACHE = 'smart-msw-v2';
 
 const PRECACHE = [
   '/',
