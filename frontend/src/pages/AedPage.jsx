@@ -67,7 +67,7 @@ function CityBorder({ borderColor }) {
 const PREVIEW = 5;
 
 export default function AedPage() {
-  const { data: locations, loading } = useFetch('/api/aed');
+  const { data: locations, loading, error } = useFetch('/api/aed');
   const [flyTo, setFlyTo] = useState(null);
   const [expanded, setExpanded] = useState(false);
   const { theme } = useThemeContext();
@@ -107,6 +107,12 @@ export default function AedPage() {
           <p className={styles.statLbl}>Publicznie dostępne</p>
         </Card>
       </div>
+
+      {error && (
+        <div className={styles.errorBanner}>
+          ⚠️ Nie udało się załadować danych. Spróbuj ponownie.
+        </div>
+      )}
 
       <div className={styles.mapWrap} style={{ filter: mapFilter }}>
         <MapContainer

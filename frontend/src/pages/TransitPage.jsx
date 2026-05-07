@@ -215,7 +215,7 @@ export default function TransitPage() {
 
       {vehiclesError && (
         <div className={styles.noticeError}>
-          ⚠️ Błąd ładowania pojazdów: {vehiclesError}
+          ⚠️ Nie udało się pobrać pozycji pojazdów. Feed GTFS-RT jest dostępny tylko z polskich serwerów — na Vercelu (serwer zagraniczny) ta funkcja może być niedostępna. Dane przystanków są nadal widoczne.
         </div>
       )}
 

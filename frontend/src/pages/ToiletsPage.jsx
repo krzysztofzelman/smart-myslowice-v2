@@ -18,7 +18,11 @@ export default function ToiletsPage() {
       </header>
 
       {loading && <p style={{ color: 'var(--c-muted)' }}>Ładowanie…</p>}
-      {error   && <p style={{ color: 'var(--c-red)'   }}>Błąd: {error}</p>}
+      {error   && (
+        <div style={{ padding: '1rem 1.2rem', background: 'rgba(255,59,78,0.1)', border: '1px solid rgba(255,59,78,0.3)', borderRadius: 'var(--radius)', color: 'var(--c-red)', fontSize: '0.9rem', fontWeight: 600, textAlign: 'center' }}>
+          ⚠️ Nie udało się załadować danych. Spróbuj ponownie.
+        </div>
+      )}
 
       <div className={styles.list}>
         {toilets?.slice(0, PREVIEW).map(t => (

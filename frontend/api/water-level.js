@@ -48,9 +48,17 @@ export default async function handler(req, res) {
           haversineKm(MYSLOWICE_HYDRO.lat, MYSLOWICE_HYDRO.lon, lat, lon) <= MAX_DIST_KM;
       })
       .map(s => {
-        const lat   = parseFloat(s.lat);
-        const lon   = parseFloat(s.lon);
-        const level = toInt(s.stan_wody);
+        const lat  = parseFloat(s.lat);
+        const lon  = parseFloat(s.lon);
+        const level        = toInt(s.stan_wody);
+        const warningLevel = toInt(s.stan_ostrzegawczy);
+        const alarmLevel   = toInt(s.stan_alarmowy);
+        let status = 'unknown';
+        if (level !== null) {
+          if      (alarmLevel   !== null && level >= alarmLevel)   status = 'danger';
+          else if (warningLevel !== null && level >= warningLevel) status = 'warning';
+          else                                                      status = 'safe';
+        }
         return {
           id:          s.id_stacji,
           name:        s.stacja,
@@ -58,9 +66,9 @@ export default async function handler(req, res) {
           province:    s.wojewodztwo ?? null,
           level,
           measuredAt:  s.stan_wody_data_pomiaru ?? null,
-          warningLevel: null,
-          alarmLevel:   null,
-          status:       level !== null ? 'safe' : 'unknown',
+          warningLevel,
+          alarmLevel,
+          status,
           coordinates:  (!isNaN(lat) && !isNaN(lon)) ? [lat, lon] : null,
           dist:         (!isNaN(lat) && !isNaN(lon))
             ? Math.round(haversineKm(MYSLOWICE_HYDRO.lat, MYSLOWICE_HYDRO.lon, lat, lon))
