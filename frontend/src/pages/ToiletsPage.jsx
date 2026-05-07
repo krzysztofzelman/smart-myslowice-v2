@@ -17,7 +17,13 @@ export default function ToiletsPage() {
         <p className={styles.pageSub}>Mysłowice — aktualne lokalizacje</p>
       </header>
 
-      {loading && <p style={{ color: 'var(--c-muted)' }}>Ładowanie…</p>}
+      {loading && (
+        <div className={styles.list}>
+          {[1,2,3,4,5].map(i => (
+            <div key={i} className={`skeleton`} style={{ height: '5.5rem', borderRadius: 'var(--radius)' }} />
+          ))}
+        </div>
+      )}
       {error   && (
         <div style={{ padding: '1rem 1.2rem', background: 'rgba(255,59,78,0.1)', border: '1px solid rgba(255,59,78,0.3)', borderRadius: 'var(--radius)', color: 'var(--c-red)', fontSize: '0.9rem', fontWeight: 600, textAlign: 'center' }}>
           ⚠️ Nie udało się załadować danych. Spróbuj ponownie.

@@ -38,15 +38,27 @@ export default function WeatherPage() {
           <p className={styles.heroLoc}>📍 Mysłowice, Polska</p>
           <p className={styles.heroDate}>{formatDate(now)} · {formatTime(now)}</p>
           <div className={styles.heroMain}>
-            <span className={styles.heroIcon}>{loading ? '…' : emoji}</span>
-            <div>
-              <p className={styles.heroTemp}>
-                {loading ? '…' : error ? '--' : `${weather.temp}°C`}
-              </p>
-              <p className={styles.heroDesc}>
-                {loading ? 'Ładowanie…' : error ? 'Brak danych' : weather.description}
-              </p>
-            </div>
+            {loading ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                <div className={`skeleton`} style={{ width: '4rem', height: '4rem', borderRadius: '50%' }} />
+                <div>
+                  <div className={`skeleton`} style={{ width: '8rem', height: '3rem', marginBottom: '0.5rem' }} />
+                  <div className={`skeleton`} style={{ width: '10rem', height: '1.2rem' }} />
+                </div>
+              </div>
+            ) : (
+              <>
+                <span className={styles.heroIcon}>{error ? '⛅' : emoji}</span>
+                <div>
+                  <p className={styles.heroTemp}>
+                    {error ? '--' : `${weather.temp}°C`}
+                  </p>
+                  <p className={styles.heroDesc}>
+                    {error ? 'Brak danych' : weather.description}
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -54,16 +66,43 @@ export default function WeatherPage() {
       {/* Detail cards */}
       <div className={styles.details}>
         <Card accent="var(--c-blue)">
-          <p className={styles.detailVal}>💧 {loading ? '…' : weather?.humidity ?? '--'}%</p>
-          <p className={styles.detailLbl}>Wilgotność</p>
+          {loading ? (
+            <div>
+              <div className={`skeleton skeletonStat`} style={{ height: '2rem', width: '50%' }} />
+              <div className={`skeleton skeletonStatLbl`} />
+            </div>
+          ) : (
+            <>
+              <p className={styles.detailVal}>💧 {weather?.humidity ?? '--'}%</p>
+              <p className={styles.detailLbl}>Wilgotność</p>
+            </>
+          )}
         </Card>
         <Card accent="var(--c-indigo)">
-          <p className={styles.detailVal}>💨 {loading ? '…' : weather?.windKmh ?? '--'} km/h</p>
-          <p className={styles.detailLbl}>Prędkość wiatru</p>
+          {loading ? (
+            <div>
+              <div className={`skeleton skeletonStat`} style={{ height: '2rem', width: '50%' }} />
+              <div className={`skeleton skeletonStatLbl`} />
+            </div>
+          ) : (
+            <>
+              <p className={styles.detailVal}>💨 {weather?.windKmh ?? '--'} km/h</p>
+              <p className={styles.detailLbl}>Prędkość wiatru</p>
+            </>
+          )}
         </Card>
         <Card accent="var(--c-amber)">
-          <p className={styles.detailVal}>🌡️ {loading ? '…' : weather?.feelsLike ?? '--'}°C</p>
-          <p className={styles.detailLbl}>Odczuwalna</p>
+          {loading ? (
+            <div>
+              <div className={`skeleton skeletonStat`} style={{ height: '2rem', width: '50%' }} />
+              <div className={`skeleton skeletonStatLbl`} />
+            </div>
+          ) : (
+            <>
+              <p className={styles.detailVal}>🌡️ {weather?.feelsLike ?? '--'}°C</p>
+              <p className={styles.detailLbl}>Odczuwalna</p>
+            </>
+          )}
         </Card>
       </div>
 

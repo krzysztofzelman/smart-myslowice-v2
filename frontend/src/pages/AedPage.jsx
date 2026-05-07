@@ -66,10 +66,23 @@ function CityBorder({ borderColor }) {
 
 const PREVIEW = 5;
 
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const d2r = Math.PI / 180;
+  const dLat = (lat2 - lat1) * d2r;
+  const dLng = (lng2 - lng1) * d2r;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * d2r) * Math.cos(lat2 * d2r) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 export default function AedPage() {
   const { data: locations, loading, error } = useFetch('/api/aed');
   const [flyTo, setFlyTo] = useState(null);
   const [expanded, setExpanded] = useState(false);
+  const [userPos, setUserPos] = useState(null);
+  const [geoError, setGeoError] = useState(null);
+  const [geoLoading, setGeoLoading] = useState(false);
   const { theme } = useThemeContext();
 
   const tileUrl = theme === 'dark'
@@ -79,6 +92,63 @@ export default function AedPage() {
   const borderColor = BORDER_COLOR[theme] ?? '#ffffff';
 
   const is247 = access => access.includes('24/7');
+
+  function handleFindNearest() {
+    if (!navigator.geolocation) {
+      setGeoError('Geolokalizacja nie jest wspierana przez Twoją przeglądarkę.');
+      return;
+    }
+    setGeoLoading(true);
+    setGeoError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserPos(coords);
+        setGeoLoading(false);
+        if (locations && locations.length > 0) {
+          const sorted = [...locations].sort((a, b) => {
+            const da = haversineKm(coords.lat, coords.lng, a.coordinates.lat, a.coordinates.lng);
+            const db = haversineKm(coords.lat, coords.lng, b.coordinates.lat, b.coordinates.lng);
+            return da - db;
+          });
+          const nearest = sorted[0];
+          setFlyTo([nearest.coordinates.lat, nearest.coordinates.lng]);
+        }
+      },
+      (err) => {
+        setGeoLoading(false);
+        switch (err.code) {
+          case err.PERMISSION_DENIED:
+            setGeoError('Nie udzielono dostępu do lokalizacji. Aby znaleźć najbliższy AED, włącz lokalizację w ustawieniach przeglądarki.');
+            break;
+          case err.POSITION_UNAVAILABLE:
+            setGeoError('Nie udało się ustalić Twojej lokalizacji. Spróbuj ponownie.');
+            break;
+          case err.TIMEOUT:
+            setGeoError('Upłynął czas oczekiwania na lokalizację. Spróbuj ponownie.');
+            break;
+          default:
+            setGeoError('Nie udało się pobrać lokalizacji. Spróbuj ponownie.');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+
+  const sortedLocations = userPos && locations
+    ? [...locations].sort((a, b) => {
+        const da = haversineKm(userPos.lat, userPos.lng, a.coordinates.lat, a.coordinates.lng);
+        const db = haversineKm(userPos.lat, userPos.lng, b.coordinates.lat, b.coordinates.lng);
+        return da - db;
+      })
+    : locations;
+
+  function distLabel(loc) {
+    if (!userPos) return null;
+    const d = haversineKm(userPos.lat, userPos.lng, loc.coordinates.lat, loc.coordinates.lng);
+    if (d < 1) return `${Math.round(d * 1000)} m`;
+    return `${d.toFixed(1)} km`;
+  }
 
   return (
     <div className={styles.page}>
@@ -95,12 +165,30 @@ export default function AedPage() {
 
       <div className={styles.statsRow}>
         <Card accent="var(--c-red)">
-          <p className={styles.statNum}>{loading ? '…' : locations?.length}</p>
-          <p className={styles.statLbl}>Defibrylatory AED</p>
+          {loading ? (
+            <div>
+              <div className={`skeleton skeletonStat`} />
+              <div className={`skeleton skeletonStatLbl`} />
+            </div>
+          ) : (
+            <>
+              <p className={styles.statNum}>{locations?.length}</p>
+              <p className={styles.statLbl}>Defibrylatory AED</p>
+            </>
+          )}
         </Card>
         <Card accent="var(--c-green)">
-          <p className={styles.statNum}>{loading ? '…' : locations?.filter(l => is247(l.access)).length}</p>
-          <p className={styles.statLbl}>Dostępne 24/7</p>
+          {loading ? (
+            <div>
+              <div className={`skeleton skeletonStat`} />
+              <div className={`skeleton skeletonStatLbl`} />
+            </div>
+          ) : (
+            <>
+              <p className={styles.statNum}>{locations?.filter(l => is247(l.access)).length}</p>
+              <p className={styles.statLbl}>Dostępne 24/7</p>
+            </>
+          )}
         </Card>
         <Card accent="var(--c-blue)">
           <p className={styles.statNum}>100%</p>
@@ -108,53 +196,83 @@ export default function AedPage() {
         </Card>
       </div>
 
+      <button
+        className={styles.geoBtn}
+        onClick={handleFindNearest}
+        disabled={geoLoading || loading}
+      >
+        {geoLoading ? '⏳ Szukanie…' : '📍 Znajdź najbliższy AED'}
+      </button>
+
+      {geoError && (
+        <div className={styles.geoError}>
+          ⚠️ {geoError}
+        </div>
+      )}
+
       {error && (
         <div className={styles.errorBanner}>
           ⚠️ Nie udało się załadować danych. Spróbuj ponownie.
         </div>
       )}
 
-      <div className={styles.mapWrap} style={{ filter: mapFilter }}>
-        <MapContainer
-          center={[50.2406, 19.1378]}
-          zoom={14}
-          style={{ height: '100%', width: '100%' }}
-        >
-          <TileLayer
-            key={tileUrl}
-            url={tileUrl}
-            attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-            maxZoom={19}
-          />
-          <CityBorder borderColor={borderColor} />
-          {flyTo && <FlyTo coords={flyTo} />}
-          {locations?.map(loc => (
-            <Marker key={loc.id} position={[loc.coordinates.lat, loc.coordinates.lng]} icon={aedIcon}>
-              <Popup>
-                <div style={{ minWidth: 220 }}>
-                  <strong style={{ fontSize: '1rem', display: 'block', marginBottom: 6 }}>{loc.name}</strong>
-                  <p style={{ marginBottom: 4, fontSize: '0.85rem', color: '#9ca3af' }}>📍 {loc.address}</p>
-                  <p style={{ marginBottom: 8, fontSize: '0.85rem' }}>🕐 {loc.access}</p>
-                  <a
-                    href={`https://www.google.com/maps/dir/?api=1&destination=${loc.coordinates.lat},${loc.coordinates.lng}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ display: 'inline-block', padding: '0.5rem 1rem', background: '#3b82f6', color: '#fff', borderRadius: 8, fontSize: '0.8rem', textDecoration: 'none', fontWeight: 600 }}
-                  >
-                    Nawiguj →
-                  </a>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
-      </div>
+      {loading ? (
+        <div className={`skeleton ${styles.mapWrap}`} />
+      ) : (
+        <div className={styles.mapWrap} style={{ filter: mapFilter }}>
+          <MapContainer
+            center={[50.2406, 19.1378]}
+            zoom={14}
+            style={{ height: '100%', width: '100%' }}
+          >
+            <TileLayer
+              key={tileUrl}
+              url={tileUrl}
+              attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+              maxZoom={19}
+            />
+            <CityBorder borderColor={borderColor} />
+            {flyTo && <FlyTo coords={flyTo} />}
+            {locations?.map(loc => (
+              <Marker key={loc.id} position={[loc.coordinates.lat, loc.coordinates.lng]} icon={aedIcon}>
+                <Popup>
+                  <div style={{ minWidth: 220 }}>
+                    <strong style={{ fontSize: '1rem', display: 'block', marginBottom: 6 }}>{loc.name}</strong>
+                    <p style={{ marginBottom: 4, fontSize: '0.85rem', color: '#9ca3af' }}>📍 {loc.address}</p>
+                    <p style={{ marginBottom: 8, fontSize: '0.85rem' }}>🕐 {loc.access}</p>
+                    <a
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${loc.coordinates.lat},${loc.coordinates.lng}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ display: 'inline-block', padding: '0.5rem 1rem', background: '#3b82f6', color: '#fff', borderRadius: 8, fontSize: '0.8rem', textDecoration: 'none', fontWeight: 600 }}
+                    >
+                      Nawiguj →
+                    </a>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
+        </div>
+      )}
 
       <div className={styles.listWrap}>
         <h2 className={styles.listTitle}>Wszystkie lokalizacje</h2>
-        {loading && <p style={{ color: 'var(--c-muted)' }}>Ładowanie…</p>}
+        {loading && (
+          <div className={styles.list}>
+            {[1,2,3,4,5].map(i => (
+              <div key={i} className={styles.listItem} style={{ cursor: 'default' }}>
+                <div className={styles.listMain}>
+                  <div className={`skeleton skeletonText`} style={{ width: '60%' }} />
+                  <div className={`skeleton skeletonText`} style={{ width: '40%', height: '0.8rem' }} />
+                </div>
+                <div className={`skeleton`} style={{ width: '5rem', height: '1.6rem', borderRadius: 99 }} />
+              </div>
+            ))}
+          </div>
+        )}
         <div className={styles.list}>
-          {locations?.slice(0, PREVIEW).map(loc => (
+          {sortedLocations?.slice(0, PREVIEW).map(loc => (
             <button
               key={loc.id}
               className={styles.listItem}
@@ -164,20 +282,25 @@ export default function AedPage() {
                 <span className={styles.listName}>{loc.name}</span>
                 <span className={styles.listAddr}>📍 {loc.address}</span>
               </div>
-              <Badge variant={is247(loc.access) ? 'green' : 'amber'}>
-                {loc.access}
-              </Badge>
+              <div className={styles.listRight}>
+                {distLabel(loc) && (
+                  <span className={styles.distLabel}>{distLabel(loc)}</span>
+                )}
+                <Badge variant={is247(loc.access) ? 'green' : 'amber'}>
+                  {loc.access}
+                </Badge>
+              </div>
             </button>
           ))}
         </div>
-        {locations?.length > PREVIEW && (
+        {sortedLocations?.length > PREVIEW && (
           <>
             <div
               className={styles.listExtra}
-              style={{ maxHeight: expanded ? `${(locations.length - PREVIEW) * 90}px` : '0' }}
+              style={{ maxHeight: expanded ? `${(sortedLocations.length - PREVIEW) * 90}px` : '0' }}
             >
               <div className={styles.list} style={{ paddingTop: '0.4rem' }}>
-                {locations.slice(PREVIEW).map(loc => (
+                {sortedLocations.slice(PREVIEW).map(loc => (
                   <button
                     key={loc.id}
                     className={styles.listItem}
@@ -187,9 +310,14 @@ export default function AedPage() {
                       <span className={styles.listName}>{loc.name}</span>
                       <span className={styles.listAddr}>📍 {loc.address}</span>
                     </div>
-                    <Badge variant={is247(loc.access) ? 'green' : 'amber'}>
-                      {loc.access}
-                    </Badge>
+                    <div className={styles.listRight}>
+                      {distLabel(loc) && (
+                        <span className={styles.distLabel}>{distLabel(loc)}</span>
+                      )}
+                      <Badge variant={is247(loc.access) ? 'green' : 'amber'}>
+                        {loc.access}
+                      </Badge>
+                    </div>
                   </button>
                 ))}
               </div>
@@ -200,7 +328,7 @@ export default function AedPage() {
             >
               {expanded
                 ? '▲ Zwiń'
-                : `▼ Pokaż wszystkie (${locations.length})`}
+                : `▼ Pokaż wszystkie (${sortedLocations.length})`}
             </button>
           </>
         )}

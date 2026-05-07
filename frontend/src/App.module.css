@@ -26,3 +26,31 @@
   font-size: 0.8rem;
   opacity: 0.6;
 }
+
+/* ── Lazy loading fallback ──────────────────────────────────────────────── */
+.fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+  padding: 6rem 2rem;
+}
+
+.fallbackSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--c-border);
+  border-top-color: var(--c-green);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.fallbackText {
+  color: var(--c-muted);
+  font-size: 0.9rem;
+}

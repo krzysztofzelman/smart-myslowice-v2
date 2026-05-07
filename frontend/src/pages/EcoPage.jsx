@@ -15,12 +15,27 @@ export default function EcoPage() {
 
       <div className={styles.statsRow}>
         <Card accent="var(--c-green)">
-          <p className={styles.statNum}>{loading ? '…' : points?.length ?? 0}</p>
-          <p className={styles.statLbl}>Punkty zbiórki</p>
+          {loading ? (
+            <div>
+              <div className={`skeleton skeletonStat`} />
+              <div className={`skeleton skeletonStatLbl`} />
+            </div>
+          ) : (
+            <>
+              <p className={styles.statNum}>{points?.length ?? 0}</p>
+              <p className={styles.statLbl}>Punkty zbiórki</p>
+            </>
+          )}
         </Card>
       </div>
 
-      {loading && <p style={{ color: 'var(--c-muted)' }}>Ładowanie…</p>}
+      {loading && (
+        <div className={styles.list}>
+          {[1,2].map(i => (
+            <div key={i} className={`skeleton`} style={{ height: '10rem', borderRadius: 'var(--radius)' }} />
+          ))}
+        </div>
+      )}
       {error   && (
         <div style={{ padding: '1rem 1.2rem', background: 'rgba(255,59,78,0.1)', border: '1px solid rgba(255,59,78,0.3)', borderRadius: 'var(--radius)', color: 'var(--c-red)', fontSize: '0.9rem', fontWeight: 600, textAlign: 'center' }}>
           ⚠️ Nie udało się załadować danych. Spróbuj ponownie.

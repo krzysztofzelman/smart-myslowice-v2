@@ -138,46 +138,85 @@ export default function WaterPage() {
       {/* ── Stats ──────────────────────────────────────────────────── */}
       <div className={styles.statsRow}>
         <Card accent="var(--c-blue)">
-          <p className={styles.statNum}>{loading ? '…' : (stations?.length ?? 0)}</p>
-          <p className={styles.statLbl}>Stacji pomiarowych</p>
+          {loading ? (
+            <div>
+              <div className={`skeleton skeletonStat`} />
+              <div className={`skeleton skeletonStatLbl`} />
+            </div>
+          ) : (
+            <>
+              <p className={styles.statNum}>{stations?.length ?? 0}</p>
+              <p className={styles.statLbl}>Stacji pomiarowych</p>
+            </>
+          )}
         </Card>
         <Card accent="var(--c-red)">
-          <p className={styles.statNum}>{loading ? '…' : count('danger')}</p>
-          <p className={styles.statLbl}>Stan alarmowy</p>
+          {loading ? (
+            <div>
+              <div className={`skeleton skeletonStat`} />
+              <div className={`skeleton skeletonStatLbl`} />
+            </div>
+          ) : (
+            <>
+              <p className={styles.statNum}>{count('danger')}</p>
+              <p className={styles.statLbl}>Stan alarmowy</p>
+            </>
+          )}
         </Card>
         <Card accent="var(--c-amber)">
-          <p className={styles.statNum}>{loading ? '…' : count('warning')}</p>
-          <p className={styles.statLbl}>Stan ostrzegawczy</p>
+          {loading ? (
+            <div>
+              <div className={`skeleton skeletonStat`} />
+              <div className={`skeleton skeletonStatLbl`} />
+            </div>
+          ) : (
+            <>
+              <p className={styles.statNum}>{count('warning')}</p>
+              <p className={styles.statLbl}>Stan ostrzegawczy</p>
+            </>
+          )}
         </Card>
         <Card accent="var(--c-green)">
-          <p className={styles.statNum}>{loading ? '…' : count('safe')}</p>
-          <p className={styles.statLbl}>Stan normalny</p>
+          {loading ? (
+            <div>
+              <div className={`skeleton skeletonStat`} />
+              <div className={`skeleton skeletonStatLbl`} />
+            </div>
+          ) : (
+            <>
+              <p className={styles.statNum}>{count('safe')}</p>
+              <p className={styles.statLbl}>Stan normalny</p>
+            </>
+          )}
         </Card>
       </div>
 
       {/* ── Map ────────────────────────────────────────────────────── */}
-      <div className={styles.mapWrap} style={{ filter: mapFilter }}>
-        <MapContainer
-          center={[50.213, 19.166]}
-          zoom={11}
-          style={{ height: '100%', width: '100%' }}
-        >
-          <TileLayer
-            key={tileUrl}
-            url={tileUrl}
-            attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-            maxZoom={19}
-          />
-          <CityBorder borderColor={borderColor} />
-          {flyTo && <FlyTo coords={flyTo} />}
-          {withCoords.map(s => (
-            <Marker
-              key={s.id}
-              position={s.coordinates}
-              icon={makeWaterIcon(s.status)}
-            >
-              <Popup>
-                <div style={{ minWidth: 210 }}>
+      {loading ? (
+        <div className={`skeleton ${styles.mapWrap}`} />
+      ) : (
+        <div className={styles.mapWrap} style={{ filter: mapFilter }}>
+          <MapContainer
+            center={[50.213, 19.166]}
+            zoom={11}
+            style={{ height: '100%', width: '100%' }}
+          >
+            <TileLayer
+              key={tileUrl}
+              url={tileUrl}
+              attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+              maxZoom={19}
+            />
+            <CityBorder borderColor={borderColor} />
+            {flyTo && <FlyTo coords={flyTo} />}
+            {withCoords.map(s => (
+              <Marker
+                key={s.id}
+                position={s.coordinates}
+                icon={makeWaterIcon(s.status)}
+              >
+                <Popup>
+                  <div style={{ minWidth: 210 }}>
                   <strong style={{ fontSize: '1rem', display: 'block', marginBottom: 6 }}>{s.name}</strong>
                   <p style={{ marginBottom: 4, fontSize: '0.85rem', color: '#9ca3af' }}>🌊 {riverLabel(s.river)}</p>
                   {s.level !== null && (

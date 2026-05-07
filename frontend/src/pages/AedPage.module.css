@@ -126,3 +126,54 @@
   font-weight: 600;
   text-align: center;
 }
+
+/* ── Geolokalizacja ─────────────────────────────────────────────────────── */
+.geoBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.85rem 1.2rem;
+  background: rgba(59,130,246,0.1);
+  border: 1px solid rgba(59,130,246,0.3);
+  border-radius: var(--radius);
+  color: var(--c-blue);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, opacity 0.18s;
+}
+.geoBtn:hover:not(:disabled) {
+  background: rgba(59,130,246,0.18);
+  border-color: rgba(59,130,246,0.5);
+}
+.geoBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.geoError {
+  padding: 0.85rem 1.2rem;
+  background: rgba(255,59,78,0.08);
+  border: 1px solid rgba(255,59,78,0.25);
+  border-radius: var(--radius);
+  color: var(--c-red);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.listRight {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.distLabel {
+  font-size: 0.78rem;
+  color: var(--c-blue);
+  font-weight: 600;
+  white-space: nowrap;
+}

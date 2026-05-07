@@ -91,3 +91,49 @@ body {
     color            1s ease,
     box-shadow       2s ease;
 }
+
+/* ── Skeleton loading ──────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--c-surface2) 25%,
+    var(--c-surface) 50%,
+    var(--c-surface2) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+.skeletonText {
+  height: 1rem;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.skeletonStat {
+  height: 3.2rem;
+  width: 60%;
+  margin-bottom: 0.4rem;
+}
+
+.skeletonStatLbl {
+  height: 0.8rem;
+  width: 80%;
+}
+
+.skeletonCard {
+  height: 5rem;
+  width: 100%;
+}
+
+.skeletonMap {
+  height: 520px;
+  width: 100%;
+  border-radius: var(--radius);
+}

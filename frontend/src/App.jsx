@@ -1,16 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import Header from './components/Header.jsx';
 import Nav from './components/Nav.jsx';
-import AedPage from './pages/AedPage.jsx';
-import AirPage from './pages/AirPage.jsx';
-import WeatherPage from './pages/WeatherPage.jsx';
-import ToiletsPage from './pages/ToiletsPage.jsx';
-import EcoPage from './pages/EcoPage.jsx';
-import WaterPage from './pages/WaterPage.jsx';
-// import TransitPage from './pages/TransitPage.jsx';
 import { useTheme } from './hooks/useTheme.js';
 import { ThemeContext } from './ThemeContext.js';
 import styles from './App.module.css';
+
+const AedPage     = lazy(() => import('./pages/AedPage.jsx'));
+const AirPage     = lazy(() => import('./pages/AirPage.jsx'));
+const WeatherPage = lazy(() => import('./pages/WeatherPage.jsx'));
+const ToiletsPage = lazy(() => import('./pages/ToiletsPage.jsx'));
+const EcoPage     = lazy(() => import('./pages/EcoPage.jsx'));
+const WaterPage   = lazy(() => import('./pages/WaterPage.jsx'));
+// const TransitPage = lazy(() => import('./pages/TransitPage.jsx'));
 
 const TABS = [
   { id: 'aed',     label: 'Defibrylatory', icon: '🚑' },
@@ -31,6 +32,15 @@ const PAGE = {
   water:   <WaterPage />,
   // transit: <TransitPage />,
 };
+
+function PageFallback() {
+  return (
+    <div className={styles.fallback}>
+      <div className={styles.fallbackSpinner} />
+      <p className={styles.fallbackText}>Ładowanie…</p>
+    </div>
+  );
+}
 
 const THEME_CYCLE = ['light', 'dusk', 'dark'];
 
@@ -56,7 +66,9 @@ export default function App() {
         <Header />
         <Nav tabs={TABS} active={active} onSwitch={setActive} />
         <main className={styles.main}>
-          {PAGE[active]}
+          <Suspense fallback={<PageFallback />}>
+            {PAGE[active]}
+          </Suspense>
         </main>
         <footer className={styles.footer}>
           <p><strong>Smart Mysłowice</strong> — Projekt edukacyjny</p>

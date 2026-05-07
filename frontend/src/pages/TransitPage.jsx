@@ -112,16 +112,43 @@ export default function TransitPage() {
       {/* ── Stats ── */}
       <div className={styles.statsRow}>
         <Card accent="var(--c-green)">
-          <p className={styles.statNum}>{vehiclesLoading ? '…' : busCount}</p>
-          <p className={styles.statLbl}>Autobusów aktualnie</p>
+          {vehiclesLoading ? (
+            <div>
+              <div className={`skeleton skeletonStat`} />
+              <div className={`skeleton skeletonStatLbl`} />
+            </div>
+          ) : (
+            <>
+              <p className={styles.statNum}>{busCount}</p>
+              <p className={styles.statLbl}>Autobusów aktualnie</p>
+            </>
+          )}
         </Card>
         <Card accent="var(--c-red)">
-          <p className={styles.statNum}>{vehiclesLoading ? '…' : tramCount}</p>
-          <p className={styles.statLbl}>Tramwajów aktualnie</p>
+          {vehiclesLoading ? (
+            <div>
+              <div className={`skeleton skeletonStat`} />
+              <div className={`skeleton skeletonStatLbl`} />
+            </div>
+          ) : (
+            <>
+              <p className={styles.statNum}>{tramCount}</p>
+              <p className={styles.statLbl}>Tramwajów aktualnie</p>
+            </>
+          )}
         </Card>
         <Card accent="var(--c-blue)">
-          <p className={styles.statNum}>{stopsLoading ? '…' : (stops?.length ?? 0)}</p>
-          <p className={styles.statLbl}>Przystanków</p>
+          {stopsLoading ? (
+            <div>
+              <div className={`skeleton skeletonStat`} />
+              <div className={`skeleton skeletonStatLbl`} />
+            </div>
+          ) : (
+            <>
+              <p className={styles.statNum}>{stops?.length ?? 0}</p>
+              <p className={styles.statLbl}>Przystanków</p>
+            </>
+          )}
         </Card>
       </div>
 

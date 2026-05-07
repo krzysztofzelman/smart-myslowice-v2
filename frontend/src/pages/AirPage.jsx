@@ -143,20 +143,53 @@ export default function AirPage() {
 
       <div className={styles.statsRow}>
         <Card accent="var(--c-blue)">
-          <p className={styles.statNum}>{loading ? '…' : validPm25.length}</p>
-          <p className={styles.statLbl}>Stacje aktywne</p>
+          {loading ? (
+            <div>
+              <div className={`skeleton skeletonStat`} />
+              <div className={`skeleton skeletonStatLbl`} />
+            </div>
+          ) : (
+            <>
+              <p className={styles.statNum}>{validPm25.length}</p>
+              <p className={styles.statLbl}>Stacje aktywne</p>
+            </>
+          )}
         </Card>
         <Card accent={avgAccent}>
-          <p className={styles.statNum}>{loading ? '…' : avgPm25 ?? '--'}</p>
-          <p className={styles.statLbl}>Średnie PM2.5 µg/m³</p>
+          {loading ? (
+            <div>
+              <div className={`skeleton skeletonStat`} />
+              <div className={`skeleton skeletonStatLbl`} />
+            </div>
+          ) : (
+            <>
+              <p className={styles.statNum}>{avgPm25 ?? '--'}</p>
+              <p className={styles.statLbl}>Średnie PM2.5 µg/m³</p>
+            </>
+          )}
         </Card>
         <Card accent="var(--c-blue)">
-          <p className={styles.statNum}>{loading ? '…' : avgPm10 ?? '--'}</p>
-          <p className={styles.statLbl}>Średnie PM10 µg/m³</p>
+          {loading ? (
+            <div>
+              <div className={`skeleton skeletonStat`} />
+              <div className={`skeleton skeletonStatLbl`} />
+            </div>
+          ) : (
+            <>
+              <p className={styles.statNum}>{avgPm10 ?? '--'}</p>
+              <p className={styles.statLbl}>Średnie PM10 µg/m³</p>
+            </>
+          )}
         </Card>
       </div>
 
-      {loading && <p style={{ color: 'var(--c-muted)' }}>Ładowanie danych z GIOŚ…</p>}
+      {loading && (
+        <div className={styles.grid}>
+          {[1,2,3,4].map(i => (
+            <div key={i} className={`skeleton`} style={{ height: '14rem', borderRadius: 'var(--radius)' }} />
+          ))}
+        </div>
+      )}
       {error   && <p style={{ color: 'var(--c-red)' }}>Błąd: {error}</p>}
 
       <div className={styles.grid}>
