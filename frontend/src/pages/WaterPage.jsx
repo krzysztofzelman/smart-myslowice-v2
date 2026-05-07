@@ -217,30 +217,31 @@ export default function WaterPage() {
               >
                 <Popup>
                   <div style={{ minWidth: 210 }}>
-                  <strong style={{ fontSize: '1rem', display: 'block', marginBottom: 6 }}>{s.name}</strong>
-                  <p style={{ marginBottom: 4, fontSize: '0.85rem', color: '#9ca3af' }}>🌊 {riverLabel(s.river)}</p>
-                  {s.level !== null && (
-                    <p style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: 4 }}>
-                      {s.level} cm
-                    </p>
-                  )}
-                  {s.warningLevel !== null && (
-                    <p style={{ fontSize: '0.8rem', color: '#f59e0b' }}>⚠️ Ostrzegawczy: {s.warningLevel} cm</p>
-                  )}
-                  {s.alarmLevel !== null && (
-                    <p style={{ fontSize: '0.8rem', color: '#ff3b4e' }}>🚨 Alarmowy: {s.alarmLevel} cm</p>
-                  )}
-                  {s.measuredAt && (
-                    <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: 8 }}>
-                      Pomiar: {s.measuredAt}
-                    </p>
-                  )}
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
-      </div>
+                      <strong style={{ fontSize: '1rem', display: 'block', marginBottom: 6 }}>{s.name}</strong>
+                      <p style={{ marginBottom: 4, fontSize: '0.85rem', color: '#9ca3af' }}>🌊 {riverLabel(s.river)}</p>
+                      {s.level !== null && (
+                          <p style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: 4 }}>
+                              {s.level} cm
+                          </p>
+                      )}
+                      {s.warningLevel !== null && (
+                          <p style={{ fontSize: '0.8rem', color: '#f59e0b' }}>⚠️ Ostrzegawczy: {s.warningLevel} cm</p>
+                      )}
+                      {s.alarmLevel !== null && (
+                          <p style={{ fontSize: '0.8rem', color: '#ff3b4e' }}>🚨 Alarmowy: {s.alarmLevel} cm</p>
+                      )}
+                      {s.measuredAt && (
+                          <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: 8 }}>
+                              Pomiar: {s.measuredAt}
+                          </p>
+                      )}
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
+        </div>
+      )}
 
       <div className={styles.listWrap}>
         {/* ── Station list ───────────────────────────────────────────── */}
