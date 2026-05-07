@@ -242,8 +242,8 @@ export default function WaterPage() {
         </MapContainer>
       </div>
 
-      {/* ── Station list ───────────────────────────────────────────── */}
       <div className={styles.listWrap}>
+      {/* ── Station list ───────────────────────────────────────────── */}
         <h2 className={styles.listTitle}>Stacje hydrologiczne</h2>
         {loading && <p className={styles.hint}>Ładowanie danych IMGW…</p>}
         {error   && <p className={styles.err}>Błąd pobierania: {error}</p>}
