@@ -111,7 +111,7 @@ export default function WaterPage() {
 
   const overall  = overallStatus(stations);
   const alertCfg = ALERT_CFG[overall];
-  const withCoords = stations?.filter(s => s.coordinates) ?? [];
+  const withCoords = stations?.filter((s) => s.coordinates) ?? [];
 
   const count = (status) => stations?.filter(s => s.status === status).length ?? 0;
 
