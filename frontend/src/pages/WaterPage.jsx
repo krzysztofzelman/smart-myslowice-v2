@@ -248,7 +248,7 @@ export default function WaterPage() {
         {loading && <p className={styles.hint}>Ładowanie danych IMGW…</p>}
         {error   && <p className={styles.err}>Błąd pobierania: {error}</p>}
         <div className={styles.list}>
-          {stations?.slice(0, PREVIEW).map(s => (
+          {stations?.slice(0, PREVIEW).map((s) => (
             <button
               key={s.id}
               className={styles.listItem}
