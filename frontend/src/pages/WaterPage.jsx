@@ -209,7 +209,7 @@ export default function WaterPage() {
             />
             <CityBorder borderColor={borderColor} />
             {flyTo && <FlyTo coords={flyTo} />}
-            {withCoords.map(s => (
+            {withCoords.map((s) => (
               <Marker
                 key={s.id}
                 position={s.coordinates}
