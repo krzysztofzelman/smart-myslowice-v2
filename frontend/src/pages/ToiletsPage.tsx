@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { ToiletLocation } from '../types/api';
 import { useFetch } from '../hooks/useFetch';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
@@ -7,7 +8,7 @@ import styles from './ToiletsPage.module.css';
 const PREVIEW = 5;
 
 export default function ToiletsPage() {
-  const { data: toilets, loading, error } = useFetch('/api/toilets');
+  const { data: toilets, loading, error } = useFetch<ToiletLocation[]>('/api/toilets');
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -51,7 +52,7 @@ export default function ToiletsPage() {
         ))}
       </div>
 
-      {toilets?.length > PREVIEW && (
+      {toilets && toilets.length > PREVIEW && (
         <>
           <div
             className={styles.listExtra}

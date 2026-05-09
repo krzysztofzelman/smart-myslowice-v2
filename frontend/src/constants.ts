@@ -1,4 +1,4 @@
-export const OWM_ICONS = {
+export const OWM_ICONS: Record<string, string> = {
   '01d': '☀️', '01n': '🌙',
   '02d': '⛅', '02n': '⛅',
   '03d': '☁️', '03n': '☁️',

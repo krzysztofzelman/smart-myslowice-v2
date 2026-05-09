@@ -1,73 +1,73 @@
-/* ───────── API response types ───────── */
+/* ───────── Actual API response types (matching Vercel serverless functions) ───────── */
 
-export interface AirlyStation {
-  id: string;
+export interface AedLocation {
+  id: number;
   name: string;
-  location: { lat: number; lng: number };
-  pm25?: number;
-  pm10?: number;
-  aqi?: string;
-  updated?: string;
+  address: string;
+  coordinates: { lat: number; lng: number };
+  access: string;
+  description?: string;
 }
 
-export interface AirlyHistoryPoint {
+export interface AirSensor {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  pm25: number | null;
+  pm10: number | null;
+  quality: string;
+  updatedAt: string | null;
+  source: 'gios' | 'airly';
+}
+
+export interface AirHistoryPoint {
   time: string;
   pm25: number | null;
   pm10: number | null;
 }
 
-export interface AedLocation {
-  id: string;
-  nazwa: string;
-  adres: string;
-  lat: number;
-  lng: number;
-  dostepnosc: string;
-  uwagi?: string;
-}
-
 export interface WeatherData {
   temp: number;
-  humidity: number;
-  pressure: number;
-  windSpeed: number;
-  windDir: number;
-  icon: string;
+  feelsLike: number;
   description: string;
+  humidity: number;
+  windKmh: number;
+  icon: string;
   sunrise: number;
   sunset: number;
 }
 
 export interface ToiletLocation {
-  id: string;
-  nazwa: string;
-  adres: string;
-  lat: number;
-  lng: number;
-  rodzaj: string;
-  uwagi?: string;
+  id: number;
+  name: string;
+  address: string;
+  access: string;
+  paid: boolean;
 }
 
 export interface EcoPoint {
-  id: string;
-  nazwa: string;
-  adres: string;
-  lat: number;
-  lng: number;
-  przyjmowane: string[];
-  uwagi?: string;
+  id: number;
+  name: string;
+  address: string;
+  type?: string;
+  hours: string;
+  phone: string;
+  accepts: string;
 }
 
 export interface WaterLevel {
   id: string;
-  nazwa: string;
-  rzeka: string;
-  stan: number;
-  stanOstrzegawczy: number;
-  stanAlarmowy: number;
-  trend: 'rising' | 'falling' | 'stable';
-  lat: number;
-  lng: number;
+  name: string;
+  river: string;
+  province: string | null;
+  level: number | null;
+  measuredAt: string | null;
+  warningLevel: number | null;
+  alarmLevel: number | null;
+  status: 'safe' | 'warning' | 'danger' | 'unknown';
+  coordinates: [number, number] | null;
+  dist: number | null;
 }
 
 export interface TransitVehicle {

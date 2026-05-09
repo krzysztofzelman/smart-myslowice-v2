@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import type { AirSensor } from '../types/api';
 import { useFetch } from '../hooks/useFetch';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
 import AirHistoryModal from '../components/AirHistoryModal';
 import styles from './AirPage.module.css';
 
-const QUALITY = {
+const QUALITY: Record<string, { label: string; variant: 'green' | 'amber' | 'red' | 'muted'; color: string }> = {
   good:    { label: 'Dobra',      variant: 'green', color: '#22d3a5' },
   moderate:{ label: 'Średnia',    variant: 'amber', color: '#f59e0b' },
   poor:    { label: 'Zła',        variant: 'red',   color: '#ff3b4e' },
@@ -13,11 +15,11 @@ const QUALITY = {
 };
 
 const PM_BARS = [
-  { key: 'pm25', label: 'PM2.5', color: null },
-  { key: 'pm10', label: 'PM10',  color: '#3b82f6' },
+  { key: 'pm25' as const, label: 'PM2.5', color: null as string | null },
+  { key: 'pm10' as const, label: 'PM10',  color: '#3b82f6' as string | null },
 ];
 
-function PmBars({ s, qColor }) {
+function PmBars({ s, qColor }: { s: AirSensor; qColor: string }) {
   return (
     <div className={styles.pmBars}>
       {PM_BARS.map(({ key, label, color: fixed }) => {
@@ -35,7 +37,7 @@ function PmBars({ s, qColor }) {
             <div className={styles.pmBarTrack}>
               <div
                 className={styles.pmBarFill}
-                style={{ '--bar-w': `${pct}%`, backgroundColor: color }}
+                style={{ '--bar-w': `${pct}%`, backgroundColor: color } as React.CSSProperties}
               />
             </div>
           </div>
@@ -45,13 +47,17 @@ function PmBars({ s, qColor }) {
   );
 }
 
-function formatUpdated(dateStr) {
+function formatUpdated(dateStr: string | null): string | null {
   if (!dateStr) return null;
   const d = new Date(dateStr.replace(' ', 'T'));
   return d.toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
-function SensorCard({ s, onSelect, onGiosClick }) {
+function SensorCard({ s, onSelect, onGiosClick }: {
+  s: AirSensor;
+  onSelect: (station: AirSensor) => void;
+  onGiosClick: () => void;
+}) {
   const q = QUALITY[s.quality] ?? QUALITY.unknown;
   const updated = formatUpdated(s.updatedAt);
   const isAirly = s.source === 'airly';
@@ -105,23 +111,47 @@ function SensorCard({ s, onSelect, onGiosClick }) {
 }
 
 export default function AirPage() {
-  const { data: sensors, loading, error } = useFetch('/api/air');
-  const [selectedStation, setSelectedStation] = useState(null);
-  const [toastMessage, setToastMessage] = useState(null);
+  const { data: sensors, loading, error } = useFetch<AirSensor[]>('/api/air');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedStation, setSelectedStation] = useState<AirSensor | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  function showToast(msg) {
+  // Deep linking: open station modal from ?stationId=xxx
+  useEffect(() => {
+    const stationId = searchParams.get('stationId');
+    if (stationId && sensors && sensors.length > 0) {
+      const station = sensors.find(
+        (s) => s.id === stationId || s.id === `airly-${stationId}`
+      );
+      if (station && station.source === 'airly') {
+        setSelectedStation(station);
+      }
+    }
+  }, [searchParams, sensors]);
+
+  function handleSelect(station: AirSensor) {
+    setSelectedStation(station);
+    setSearchParams({ stationId: station.id.replace('airly-', '') }, { replace: true });
+  }
+
+  function handleClose() {
+    setSelectedStation(null);
+    setSearchParams({}, { replace: true });
+  }
+
+  function showToast(msg: string) {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   }
 
   const validPm25 = sensors?.filter(s => s.pm25 !== null) ?? [];
   const avgPm25 = validPm25.length
-    ? Math.round(validPm25.reduce((s, x) => s + x.pm25, 0) / validPm25.length)
+    ? Math.round(validPm25.reduce((s, x) => s + (x.pm25 ?? 0), 0) / validPm25.length)
     : null;
 
   const validPm10 = sensors?.filter(s => s.pm10 !== null) ?? [];
   const avgPm10 = validPm10.length
-    ? Math.round(validPm10.reduce((s, x) => s + x.pm10, 0) / validPm10.length)
+    ? Math.round(validPm10.reduce((s, x) => s + (x.pm10 ?? 0), 0) / validPm10.length)
     : null;
 
   const avgQuality = avgPm25 === null ? 'unknown'
@@ -193,18 +223,18 @@ export default function AirPage() {
       {error   && <p style={{ color: 'var(--c-red)' }}>Błąd: {error}</p>}
 
       <div className={styles.grid}>
-        {validPm25.map(s => (
+        {(sensors ?? []).map(s => (
           <SensorCard
             key={s.id}
             s={s}
-            onSelect={setSelectedStation}
+            onSelect={handleSelect}
             onGiosClick={() => showToast('📊 Dane historyczne niedostępne dla stacji GIOŚ')}
           />
         ))}
       </div>
 
       {selectedStation && (
-        <AirHistoryModal station={selectedStation} onClose={() => setSelectedStation(null)} />
+        <AirHistoryModal station={selectedStation} onClose={handleClose} />
       )}
 
       {toastMessage && (

@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 
 // Mock Leaflet
 vi.mock('leaflet', () => {
@@ -79,7 +80,11 @@ describe('AedPage', () => {
   });
 
   it('should render the component', async () => {
-    render(<AedPage />);
+    render(
+      <MemoryRouter>
+        <AedPage />
+      </MemoryRouter>
+    );
     expect(screen.getByText(/defibrylator/i)).toBeInTheDocument();
   });
 });

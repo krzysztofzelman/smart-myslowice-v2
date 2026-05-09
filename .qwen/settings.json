@@ -17,7 +17,9 @@
       "Bash(npm uninstall *)",
       "Bash(ls *)",
       "Bash(dir *)",
-      "Bash(powershell *)"
+      "Bash(powershell *)",
+      "Bash(rd *)",
+      "Bash(npm ls *)"
     ]
   },
   "$version": 4

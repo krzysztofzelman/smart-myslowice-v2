@@ -1,3 +1,4 @@
+import { NavLink } from 'react-router-dom';
 import styles from './Nav.module.css';
 
 interface Tab {
@@ -8,25 +9,25 @@ interface Tab {
 
 interface NavProps {
   tabs: Tab[];
-  active: string;
-  onSwitch: (tab: string) => void;
 }
 
-export default function Nav({ tabs, active, onSwitch }: NavProps) {
+export default function Nav({ tabs }: NavProps) {
   return (
     <nav className={styles.nav} role="navigation" aria-label="Główna nawigacja">
       <div className={styles.inner}>
         {tabs.map((tab) => (
-          <button
+          <NavLink
             key={tab.id}
-            className={`${styles.tab} ${active === tab.id ? styles.active : ''}`}
-            onClick={() => onSwitch(tab.id)}
+            to={tab.id === 'air' ? '/' : `/${tab.id}`}
+            end={tab.id === 'air'}
+            className={({ isActive }) =>
+              `${styles.tab} ${isActive ? styles.active : ''}`
+            }
             aria-label={tab.label}
-            aria-current={active === tab.id ? 'page' : undefined}
           >
             <span className={styles.icon} aria-hidden="true">{tab.icon}</span>
             <span>{tab.label}</span>
-          </button>
+          </NavLink>
         ))}
       </div>
     </nav>

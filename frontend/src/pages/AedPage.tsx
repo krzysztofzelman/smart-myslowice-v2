@@ -1,20 +1,21 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import type { AedLocation } from '../types/api';
 import { useFetch } from '../hooks/useFetch';
 import { useThemeContext } from '../ThemeContext';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
 import styles from './AedPage.module.css';
 
-delete L.Icon.Default.prototype._getIconUrl;
+// delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-const BORDER_COLOR = { light: '#000000', dusk: '#ffffff', dark: '#ffffff' };
+const BORDER_COLOR: Record<string, string> = { light: '#000000', dusk: '#ffffff', dark: '#ffffff' };
 
 const aedIcon = L.divIcon({
   className: '',
@@ -24,36 +25,43 @@ const aedIcon = L.divIcon({
   popupAnchor: [0, -24],
 });
 
-function FlyTo({ coords }) {
+interface FlyToProps {
+  coords: [number, number];
+}
+
+function FlyTo({ coords }: FlyToProps) {
   const map = useMap();
   useEffect(() => { if (coords) map.flyTo(coords, 17, { duration: 1.2 }); }, [coords, map]);
   return null;
 }
 
-function CityBorder({ borderColor }) {
+interface CityBorderProps {
+  borderColor: string;
+}
+
+function CityBorder({ borderColor }: CityBorderProps) {
   const map = useMap();
-  const layerRef = useRef(null);
+  const layerRef = useRef<L.GeoJSON | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    let layer;
     const url = 'https://nominatim.openstreetmap.org/search?' +
       new URLSearchParams({ q: 'MysÅ‚owice, Poland', polygon_geojson: '1', format: 'json', limit: '1' });
     fetch(url)
       .then(r => r.json())
-      .then(data => {
+      .then((data: Record<string, unknown>[]) => {
         if (cancelled) return;
-        const geo = data?.[0]?.geojson;
+        const geo = (data?.[0] as Record<string, unknown> | undefined)?.geojson;
         if (!geo) return;
-        layer = L.geoJSON({ type: 'Feature', geometry: geo }, {
+        const layer = L.geoJSON({ type: 'Feature', geometry: geo } as GeoJSON.Feature, {
           style: { color: borderColor, weight: 2, fillOpacity: 0 },
         }).addTo(map);
         layerRef.current = layer;
       })
-      .catch(err => console.warn('[CityBorder]', err));
+      .catch((err: Error) => console.warn('[CityBorder]', err));
     return () => {
       cancelled = true;
-      if (layer) { map.removeLayer(layer); layerRef.current = null; }
+      if (layerRef.current) { map.removeLayer(layerRef.current); layerRef.current = null; }
     };
   }, [map, borderColor]);
 
@@ -66,7 +74,7 @@ function CityBorder({ borderColor }) {
 
 const PREVIEW = 5;
 
-function haversineKm(lat1, lng1, lat2, lng2) {
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371;
   const d2r = Math.PI / 180;
   const dLat = (lat2 - lat1) * d2r;
@@ -77,11 +85,11 @@ function haversineKm(lat1, lng1, lat2, lng2) {
 }
 
 export default function AedPage() {
-  const { data: locations, loading, error } = useFetch('/api/aed');
-  const [flyTo, setFlyTo] = useState(null);
+  const { data: locations, loading, error } = useFetch<AedLocation[]>('/api/aed');
+  const [flyTo, setFlyTo] = useState<[number, number] | null>(null);
   const [expanded, setExpanded] = useState(false);
-  const [userPos, setUserPos] = useState(null);
-  const [geoError, setGeoError] = useState(null);
+  const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [geoError, setGeoError] = useState<string | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
   const { theme } = useThemeContext();
 
@@ -91,7 +99,7 @@ export default function AedPage() {
   const mapFilter = theme === 'dusk' ? 'brightness(0.7)' : 'none';
   const borderColor = BORDER_COLOR[theme] ?? '#ffffff';
 
-  const is247 = access => access.includes('24/7');
+  const is247 = useCallback((access: string) => access.includes('24/7'), []);
 
   function handleFindNearest() {
     if (!navigator.geolocation) {
@@ -143,7 +151,7 @@ export default function AedPage() {
       })
     : locations;
 
-  function distLabel(loc) {
+  function distLabel(loc: AedLocation): string | null {
     if (!userPos) return null;
     const d = haversineKm(userPos.lat, userPos.lng, loc.coordinates.lat, loc.coordinates.lng);
     if (d < 1) return `${Math.round(d * 1000)} m`;
@@ -198,7 +206,7 @@ export default function AedPage() {
 
       <button
         className={styles.geoBtn}
-        aria-label="ZnajdŸ najbli¿szy defibrylator"
+        aria-label="ZnajdÅº najbliÅ¼szy defibrylator"
         onClick={handleFindNearest}
         disabled={geoLoading || loading}
       >
@@ -295,7 +303,7 @@ export default function AedPage() {
             </button>
           ))}
         </div>
-        {sortedLocations?.length > PREVIEW && (
+        {sortedLocations && sortedLocations.length > PREVIEW && (
           <>
             <div
               className={styles.listExtra}
@@ -326,7 +334,7 @@ export default function AedPage() {
             </div>
             <button
               className={styles.toggleBtn}
-              aria-label={expanded ? 'Zwiñ listê' : 'Rozwiñ listê'}
+              aria-label={expanded ? 'ZwiÅ„ listÄ™' : 'RozwiÅ„ listÄ™'}
               onClick={() => setExpanded(e => !e)}
             >
               {expanded

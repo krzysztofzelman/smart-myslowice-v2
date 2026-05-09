@@ -1,11 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import type { AirHistoryPoint } from '../types/api';
 import styles from './AirHistoryModal.module.css';
+
+interface AirHistoryModalProps {
+  station: { id: string; name: string };
+  onClose: () => void;
+}
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
 
-function formatHour(isoStr) {
+function formatHour(isoStr: string): string {
   if (!isoStr) return '';
   const d = new Date(isoStr);
   return d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
@@ -14,10 +20,10 @@ function formatHour(isoStr) {
 const CHART_OPTIONS = {
   responsive: true,
   maintainAspectRatio: false,
-  interaction: { mode: 'index', intersect: false },
+  interaction: { mode: 'index' as const, intersect: false },
   plugins: {
     legend: {
-      position: 'top',
+      position: 'top' as const,
       labels: { boxWidth: 12, padding: 16, font: { size: 12 } },
     },
     tooltip: {
@@ -27,7 +33,8 @@ const CHART_OPTIONS = {
       titleFont: { size: 12 },
       bodyFont: { size: 12 },
       callbacks: {
-        label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y} µg/m³`,
+        label: (ctx: { dataset: { label?: string }; parsed: { y?: number | null } }) =>
+          `${ctx.dataset.label ?? ''}: ${ctx.parsed.y ?? '--'} µg/m³`,
       },
     },
   },
@@ -37,15 +44,19 @@ const CHART_OPTIONS = {
       grid: { display: false },
     },
     y: {
-      ticks: { font: { size: 11 }, color: 'var(--c-muted, #888)', callback: (v) => `${v} µg` },
+      ticks: {
+        font: { size: 11 },
+        color: 'var(--c-muted, #888)',
+        callback: (v: number | string) => `${v} µg`,
+      },
       grid: { color: 'rgba(255,255,255,0.06)' },
     },
   },
 };
 
-export default function AirHistoryModal({ station, onClose }) {
-  const [history, setHistory] = useState(null);
-  const [error, setError] = useState(null);
+export default function AirHistoryModal({ station, onClose }: AirHistoryModalProps) {
+  const [history, setHistory] = useState<AirHistoryPoint[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const installationId = station.id.replace('airly-', '');
 
@@ -54,7 +65,7 @@ export default function AirHistoryModal({ station, onClose }) {
     fetch(`/api/air-history?installationId=${installationId}`, { signal: ctrl.signal })
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
+        return r.json() as Promise<AirHistoryPoint[]>;
       })
       .then((data) => {
         const points = data
@@ -62,21 +73,21 @@ export default function AirHistoryModal({ station, onClose }) {
           .map((p) => ({ ...p, label: formatHour(p.time) }));
         setHistory(points);
       })
-      .catch((err) => {
+      .catch((err: Error) => {
         if (err.name !== 'AbortError') setError(err.message);
       });
     return () => ctrl.abort();
   }, [installationId]);
 
   useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
 
   const chartData = history && history.length > 0
     ? {
-        labels: history.map((p) => p.label),
+        labels: history.map((p) => (p as AirHistoryPoint & { label: string }).label),
         datasets: [
           {
             label: 'PM2.5',
