@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react';
 
+export type Theme = 'light' | 'dusk' | 'dark';
+
+interface SunTimes {
+  sunrise: number; // ms since epoch
+  sunset: number;  // ms since epoch
+}
+
 /**
  * Pobiera czas wschodu i zachodu słońca z API,
  * a następnie automatycznie przełącza motyw:
@@ -9,9 +16,9 @@ import { useState, useEffect } from 'react';
  *
  * Sprawdza co minutę, żeby nie przegapić przejścia.
  */
-export function useTheme() {
-  const [theme, setTheme] = useState('dark');
-  const [sunTimes, setSunTimes] = useState(null); // { sunrise, sunset } w ms
+export function useTheme(): Theme {
+  const [theme, setTheme] = useState<Theme>('dark');
+  const [sunTimes, setSunTimes] = useState<SunTimes | null>(null);
 
   // Pobierz wschód/zachód z backendu (raz na godzinę)
   useEffect(() => {
@@ -19,11 +26,11 @@ export function useTheme() {
       try {
         const res = await fetch('/api/weather');
         if (!res.ok) return;
-        const data = await res.json();
+        const data = await res.json() as { sunrise?: number; sunset?: number };
         if (data.sunrise && data.sunset) {
           setSunTimes({
             sunrise: data.sunrise * 1000, // → ms
-            sunset:  data.sunset  * 1000,
+            sunset: data.sunset * 1000,
           });
         }
       } catch {
@@ -40,17 +47,19 @@ export function useTheme() {
   useEffect(() => {
     if (!sunTimes) return;
 
+    const times = sunTimes; // local alias for TS null narrowing
+
     function computeTheme() {
-      const now      = Date.now();
-      const DUSK_MS  = 30 * 60 * 1000; // 30 minut buforu na zmierzch/świt
+      const now = Date.now();
+      const DUSK_MS = 30 * 60 * 1000; // 30 minut buforu na zmierzch/świt
 
-      const isDawn = now >= sunTimes.sunrise - DUSK_MS && now < sunTimes.sunrise + DUSK_MS;
-      const isDusk = now >= sunTimes.sunset  - DUSK_MS && now < sunTimes.sunset  + DUSK_MS;
-      const isDay  = now >= sunTimes.sunrise + DUSK_MS && now < sunTimes.sunset  - DUSK_MS;
+      const isDawn = now >= times.sunrise - DUSK_MS && now < times.sunrise + DUSK_MS;
+      const isDusk = now >= times.sunset - DUSK_MS && now < times.sunset + DUSK_MS;
+      const isDay = now >= times.sunrise + DUSK_MS && now < times.sunset - DUSK_MS;
 
-      if (isDay)              setTheme('light');
+      if (isDay) setTheme('light');
       else if (isDawn || isDusk) setTheme('dusk');
-      else                    setTheme('dark');
+      else setTheme('dark');
     }
 
     computeTheme();

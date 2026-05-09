@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import Header from './components/Header.jsx';
 import Nav from './components/Nav.jsx';
-import { useTheme } from './hooks/useTheme.js';
-import { ThemeContext } from './ThemeContext.js';
+import { useTheme } from './hooks/useTheme';
+import { ThemeContext } from './ThemeContext';
 import styles from './App.module.css';
 
 const AedPage     = lazy(() => import('./pages/AedPage.jsx'));

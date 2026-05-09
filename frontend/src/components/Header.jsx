@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useThemeContext } from '../ThemeContext.js';
+import { useThemeContext } from '../ThemeContext';
 import { OWM_ICONS } from '../constants.js';
 import styles from './Header.module.css';
 

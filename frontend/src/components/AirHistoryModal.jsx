@@ -1,14 +1,47 @@
 import { useEffect, useState } from 'react';
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-} from 'recharts';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend } from 'chart.js';
+import { Line } from 'react-chartjs-2';
 import styles from './AirHistoryModal.module.css';
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
 
 function formatHour(isoStr) {
   if (!isoStr) return '';
   const d = new Date(isoStr);
   return d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
 }
+
+const CHART_OPTIONS = {
+  responsive: true,
+  maintainAspectRatio: false,
+  interaction: { mode: 'index', intersect: false },
+  plugins: {
+    legend: {
+      position: 'top',
+      labels: { boxWidth: 12, padding: 16, font: { size: 12 } },
+    },
+    tooltip: {
+      backgroundColor: 'var(--c-card, #1a1a2e)',
+      borderColor: 'var(--c-border, #333)',
+      borderWidth: 1,
+      titleFont: { size: 12 },
+      bodyFont: { size: 12 },
+      callbacks: {
+        label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y} µg/m³`,
+      },
+    },
+  },
+  scales: {
+    x: {
+      ticks: { font: { size: 10 }, color: 'var(--c-muted, #888)' },
+      grid: { display: false },
+    },
+    y: {
+      ticks: { font: { size: 11 }, color: 'var(--c-muted, #888)', callback: (v) => `${v} µg` },
+      grid: { color: 'rgba(255,255,255,0.06)' },
+    },
+  },
+};
 
 export default function AirHistoryModal({ station, onClose }) {
   const [history, setHistory] = useState(null);
@@ -41,6 +74,34 @@ export default function AirHistoryModal({ station, onClose }) {
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  const chartData = history && history.length > 0
+    ? {
+        labels: history.map((p) => p.label),
+        datasets: [
+          {
+            label: 'PM2.5',
+            data: history.map((p) => p.pm25),
+            borderColor: '#22d3a5',
+            backgroundColor: 'rgba(34, 211, 165, 0.08)',
+            borderWidth: 2,
+            pointRadius: 0,
+            tension: 0.3,
+            spanGaps: true,
+          },
+          {
+            label: 'PM10',
+            data: history.map((p) => p.pm10),
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.08)',
+            borderWidth: 2,
+            pointRadius: 0,
+            tension: 0.3,
+            spanGaps: true,
+          },
+        ],
+      }
+    : null;
+
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -58,52 +119,10 @@ export default function AirHistoryModal({ station, onClose }) {
           {history && history.length === 0 && (
             <p className={styles.info}>Brak danych historycznych</p>
           )}
-          {history && history.length > 0 && (
-            <ResponsiveContainer width="100%" height={260}>
-              <LineChart data={history} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
-                <XAxis
-                  dataKey="label"
-                  tick={{ fontSize: 11, fill: 'var(--c-muted)' }}
-                  interval="preserveStartEnd"
-                />
-                <YAxis
-                  tick={{ fontSize: 11, fill: 'var(--c-muted)' }}
-                  unit=" µg"
-                  width={48}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: 'var(--c-card)',
-                    border: '1px solid var(--c-border)',
-                    borderRadius: '8px',
-                    fontSize: '0.82rem',
-                  }}
-                  formatter={(val, name) => [`${val} µg/m³`, name]}
-                />
-                <Legend
-                  wrapperStyle={{ fontSize: '0.82rem', paddingTop: '8px' }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="pm25"
-                  name="PM2.5"
-                  stroke="#22d3a5"
-                  strokeWidth={2}
-                  dot={false}
-                  connectNulls
-                />
-                <Line
-                  type="monotone"
-                  dataKey="pm10"
-                  name="PM10"
-                  stroke="#3b82f6"
-                  strokeWidth={2}
-                  dot={false}
-                  connectNulls
-                />
-              </LineChart>
-            </ResponsiveContainer>
+          {history && history.length > 0 && chartData && (
+            <div style={{ width: '100%', height: 260 }}>
+              <Line data={chartData} options={CHART_OPTIONS} />
+            </div>
           )}
         </div>
       </div>

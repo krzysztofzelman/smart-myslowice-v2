@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { useFetch } from '../hooks/useFetch.js';
-import { useThemeContext } from '../ThemeContext.js';
+import { useFetch } from '../hooks/useFetch';
+import { useThemeContext } from '../ThemeContext';
 import Card from '../components/Card.jsx';
 import Badge from '../components/Badge.jsx';
 import styles from './AedPage.module.css';
@@ -55,7 +55,7 @@ function CityBorder({ borderColor }) {
       cancelled = true;
       if (layer) { map.removeLayer(layer); layerRef.current = null; }
     };
-  }, [map]);
+  }, [map, borderColor]);
 
   useEffect(() => {
     layerRef.current?.setStyle({ color: borderColor });

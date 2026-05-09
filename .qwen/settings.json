@@ -4,8 +4,21 @@
       "Bash(npm install *)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(npm run *)",
+      "Bash(npm audit *)",
+      "Bash(npm outdated *)",
+      "Bash(npx *)",
+      "Bash(rmdir *)",
+      "Bash(node *)",
+      "Bash(del *)",
+      "Bash(du *)",
+      "Bash(findstr *)",
+      "Bash(npm uninstall *)",
+      "Bash(ls *)",
+      "Bash(dir *)",
+      "Bash(powershell *)"
     ]
   },
-  "$version": 3
+  "$version": 4
 }

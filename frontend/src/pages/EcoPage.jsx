@@ -1,4 +1,4 @@
-import { useFetch } from '../hooks/useFetch.js';
+import { useFetch } from '../hooks/useFetch';
 import Card from '../components/Card.jsx';
 import Badge from '../components/Badge.jsx';
 import styles from './ListPage.module.css';
