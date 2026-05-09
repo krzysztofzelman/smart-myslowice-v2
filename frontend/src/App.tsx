@@ -1,36 +1,42 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
-import Header from './components/Header.jsx';
-import Nav from './components/Nav.jsx';
+import Header from './components/Header';
+import Nav from './components/Nav';
 import { useTheme } from './hooks/useTheme';
 import { ThemeContext } from './ThemeContext';
+import type { Theme } from './hooks/useTheme';
 import styles from './App.module.css';
 
-const AedPage     = lazy(() => import('./pages/AedPage.jsx'));
-const AirPage     = lazy(() => import('./pages/AirPage.jsx'));
+type TabId = 'aed' | 'air' | 'weather' | 'toilets' | 'eco' | 'water';
+
+const AedPage = lazy(() => import('./pages/AedPage.jsx'));
+const AirPage = lazy(() => import('./pages/AirPage.jsx'));
 const WeatherPage = lazy(() => import('./pages/WeatherPage.jsx'));
 const ToiletsPage = lazy(() => import('./pages/ToiletsPage.jsx'));
-const EcoPage     = lazy(() => import('./pages/EcoPage.jsx'));
-const WaterPage   = lazy(() => import('./pages/WaterPage.jsx'));
-// const TransitPage = lazy(() => import('./pages/TransitPage.jsx'));
+const EcoPage = lazy(() => import('./pages/EcoPage.jsx'));
+const WaterPage = lazy(() => import('./pages/WaterPage.jsx'));
 
-const TABS = [
-  { id: 'aed',     label: 'Defibrylatory', icon: '🚑' },
-  { id: 'air',     label: 'Powietrze',     icon: '🌫️' },
-  { id: 'weather', label: 'Pogoda',         icon: '⛅' },
-  { id: 'toilets', label: 'Toalety',        icon: '🚻' },
-  { id: 'eco',     label: 'Eko-punkty',     icon: '♻️' },
-  { id: 'water',   label: 'Stan Wód',       icon: '💧' },
-  // { id: 'transit', label: 'Transport',      icon: '🚌' },
+interface Tab {
+  id: TabId;
+  label: string;
+  icon: string;
+}
+
+const TABS: Tab[] = [
+  { id: 'aed', label: 'Defibrylatory', icon: '🚑' },
+  { id: 'air', label: 'Powietrze', icon: '🌫️' },
+  { id: 'weather', label: 'Pogoda', icon: '⛅' },
+  { id: 'toilets', label: 'Toalety', icon: '🚻' },
+  { id: 'eco', label: 'Eko-punkty', icon: '♻️' },
+  { id: 'water', label: 'Stan Wód', icon: '💧' },
 ];
 
-const PAGE = {
-  aed:     <AedPage />,
-  air:     <AirPage />,
+const PAGE: Record<TabId, React.ReactNode> = {
+  aed: <AedPage />,
+  air: <AirPage />,
   weather: <WeatherPage />,
   toilets: <ToiletsPage />,
-  eco:     <EcoPage />,
-  water:   <WaterPage />,
-  // transit: <TransitPage />,
+  eco: <EcoPage />,
+  water: <WaterPage />,
 };
 
 function PageFallback() {
@@ -42,16 +48,16 @@ function PageFallback() {
   );
 }
 
-const THEME_CYCLE = ['light', 'dusk', 'dark'];
+const THEME_CYCLE: Theme[] = ['light', 'dusk', 'dark'];
 
 export default function App() {
-  const [active, setActive] = useState('aed');
+  const [active, setActive] = useState<TabId>('aed');
   const autoTheme = useTheme();
-  const [manual, setManual] = useState(null);
-  const theme = manual ?? autoTheme;
+  const [manual, setManual] = useState<Theme | null>(null);
+  const theme: Theme = manual ?? autoTheme;
 
   const cycleTheme = useCallback(() => {
-    const current = document.documentElement.getAttribute('data-theme') ?? 'dark';
+    const current = (document.documentElement.getAttribute('data-theme') ?? 'dark') as Theme;
     const next = THEME_CYCLE[(THEME_CYCLE.indexOf(current) + 1) % THEME_CYCLE.length];
     setManual(next);
   }, []);
@@ -64,7 +70,7 @@ export default function App() {
     <ThemeContext.Provider value={{ theme, cycleTheme }}>
       <div className={styles.app}>
         <Header />
-        <Nav tabs={TABS} active={active} onSwitch={setActive} />
+        <Nav tabs={TABS} active={active} onSwitch={(tab) => setActive(tab as TabId)} />
         <main className={styles.main}>
           <Suspense fallback={<PageFallback />}>
             {PAGE[active]}

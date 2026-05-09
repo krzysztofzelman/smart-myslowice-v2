@@ -3,8 +3,8 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useFetch } from '../hooks/useFetch';
 import { useThemeContext } from '../ThemeContext';
-import Card from '../components/Card.jsx';
-import Badge from '../components/Badge.jsx';
+import Card from '../components/Card';
+import Badge from '../components/Badge';
 import styles from './AedPage.module.css';
 
 delete L.Icon.Default.prototype._getIconUrl;
@@ -198,6 +198,7 @@ export default function AedPage() {
 
       <button
         className={styles.geoBtn}
+        aria-label="ZnajdŸ najbli¿szy defibrylator"
         onClick={handleFindNearest}
         disabled={geoLoading || loading}
       >
@@ -276,6 +277,7 @@ export default function AedPage() {
             <button
               key={loc.id}
               className={styles.listItem}
+              aria-label={`Nawiguj do ${loc.name}`}
               onClick={() => setFlyTo([loc.coordinates.lat, loc.coordinates.lng])}
             >
               <div className={styles.listMain}>
@@ -324,6 +326,7 @@ export default function AedPage() {
             </div>
             <button
               className={styles.toggleBtn}
+              aria-label={expanded ? 'Zwiñ listê' : 'Rozwiñ listê'}
               onClick={() => setExpanded(e => !e)}
             >
               {expanded

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import AirPage from '../pages/AirPage.jsx';
+import AirPage from '../pages/AirPage';
 
 describe('AirPage', () => {
   it('should render the component title', () => {

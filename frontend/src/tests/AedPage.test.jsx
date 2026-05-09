@@ -66,7 +66,7 @@ vi.mock('react-leaflet', () => {
   };
 });
 
-import AedPage from '../pages/AedPage.jsx';
+import AedPage from '../pages/AedPage';
 
 describe('AedPage', () => {
   beforeEach(() => {

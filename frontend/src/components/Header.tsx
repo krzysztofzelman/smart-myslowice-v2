@@ -3,18 +3,21 @@ import { useThemeContext } from '../ThemeContext';
 import { OWM_ICONS } from '../constants.js';
 import styles from './Header.module.css';
 
-const THEME_LABEL = {
+const THEME_LABEL: Record<string, string> = {
   light: '☀️ Dzień',
-  dusk:  '🌅 Zmierzch',
-  dark:  '🌙 Noc',
+  dusk: '🌅 Zmierzch',
+  dark: '🌙 Noc',
 };
 
-const DAYS = ['Niedziela','Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota'];
-const MONTHS = ['stycznia','lutego','marca','kwietnia','maja','czerwca','lipca','sierpnia','września','października','listopada','grudnia'];
+const DAYS = ['Niedziela', 'Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota'];
+const MONTHS = ['stycznia', 'lutego', 'marca', 'kwietnia', 'maja', 'czerwca', 'lipca', 'sierpnia', 'września', 'października', 'listopada', 'grudnia'];
 
-export default function Header() {
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+type HeaderProps = {};
+
+export default function Header(_props: HeaderProps) {
   const [time, setTime] = useState(new Date());
-  const [weather, setWeather] = useState(null);
+  const [weather, setWeather] = useState<{ temp: number; icon: string; description: string } | null>(null);
   const { theme, cycleTheme } = useThemeContext();
 
   // Zegar — aktualizuj co sekundę
@@ -29,7 +32,7 @@ export default function Header() {
       try {
         const res = await fetch('/api/weather');
         if (!res.ok) return;
-        const data = await res.json();
+        const data = await res.json() as { temp: number; icon: string; description: string };
         setWeather(data);
       } catch {
         // brak sieci — ignoruj
@@ -45,7 +48,7 @@ export default function Header() {
   const ss = String(time.getSeconds()).padStart(2, '0');
   const dayName = DAYS[time.getDay()];
   const dateStr = `${time.getDate()} ${MONTHS[time.getMonth()]} ${time.getFullYear()}`;
-  const emoji = weather?.icon ? (OWM_ICONS[weather.icon] ?? '⛅') : '⛅';
+  const emoji = weather?.icon ? (OWM_ICONS[weather.icon as keyof typeof OWM_ICONS] ?? '⛅') : '⛅';
 
   return (
     <header className={styles.header}>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useFetch } from '../hooks/useFetch';
 import { OWM_ICONS } from '../constants.js';
-import Card from '../components/Card.jsx';
+import Card from '../components/Card';
 import styles from './WeatherPage.module.css';
 
 function useDateTime() {

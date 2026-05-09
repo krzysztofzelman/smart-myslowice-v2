@@ -3,8 +3,8 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useFetch } from '../hooks/useFetch';
 import { useThemeContext } from '../ThemeContext';
-import Card from '../components/Card.jsx';
-import Badge from '../components/Badge.jsx';
+import Card from '../components/Card';
+import Badge from '../components/Badge';
 import styles from './WaterPage.module.css';
 
 delete L.Icon.Default.prototype._getIconUrl;

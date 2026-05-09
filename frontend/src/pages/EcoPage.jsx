@@ -1,6 +1,6 @@
 import { useFetch } from '../hooks/useFetch';
-import Card from '../components/Card.jsx';
-import Badge from '../components/Badge.jsx';
+import Card from '../components/Card';
+import Badge from '../components/Badge';
 import styles from './ListPage.module.css';
 
 export default function EcoPage() {

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useFetch } from '../hooks/useFetch';
-import Card from '../components/Card.jsx';
-import Badge from '../components/Badge.jsx';
-import AirHistoryModal from '../components/AirHistoryModal.jsx';
+import Card from '../components/Card';
+import Badge from '../components/Badge';
+import AirHistoryModal from '../components/AirHistoryModal';
 import styles from './AirPage.module.css';
 
 const QUALITY = {

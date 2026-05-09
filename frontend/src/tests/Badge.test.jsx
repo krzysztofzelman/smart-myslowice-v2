@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import Badge from '../components/Badge.jsx';
+import Badge from '../components/Badge';
 
 describe('Badge', () => {
   it('should render children text', () => {
