@@ -38,12 +38,49 @@
   letter-spacing: 0.06em;
 }
 
+/* ── Responsive two‑column layout ───────────────────────────────────────── */
+.contentRow {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.mapCol {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
+.listCol {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .contentRow {
+    flex-direction: row;
+  }
+  .mapCol {
+    flex: 1 1 55%;
+  }
+  .listCol {
+    flex: 1 1 45%;
+  }
+}
+
 /* ── Map ────────────────────────────────────────────────────────────────── */
 .mapWrap {
-  height: 520px;
+  height: 420px;
+  max-height: 60vh;
   border-radius: var(--radius);
   overflow: hidden;
   border: 1px solid var(--c-border);
+}
+
+@media (min-width: 1024px) {
+  .mapWrap {
+    height: 500px;
+    max-height: 70vh;
+  }
 }
 
 /* ── Station list ───────────────────────────────────────────────────────── */

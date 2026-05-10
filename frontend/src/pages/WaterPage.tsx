@@ -1,9 +1,7 @@
 import { useState } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import type { WaterLevel } from '../types/api';
 import { useFetch } from '../hooks/useFetch';
-import { useThemeContext } from '../ThemeContext';
-import CityBorder from '../components/CityBorder';
+import WaterMap from '../components/WaterMap';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
 import styles from './WaterPage.module.css';
@@ -50,14 +48,7 @@ export default function WaterPage() {
   const [geoError, setGeoError] = useState<string | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const { theme } = useThemeContext();
   const PREVIEW = 5;
-
-  const tileUrl = theme === 'dark'
-    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-    : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-  const mapFilter = theme === 'dusk' ? 'brightness(0.7)' : 'none';
-  const borderColor = theme === 'light' ? '#000000' : '#ffffff';
 
   function handleFindNearest() {
     if (!navigator.geolocation) {
@@ -165,54 +156,19 @@ export default function WaterPage() {
       {error   && <p style={{ color: 'var(--c-red)' }}>Błąd: {error}</p>}
 
       {loading ? (
-        <div className={`skeleton`} style={{ height: '20rem', borderRadius: 'var(--radius)' }} />
+        <div className={`skeleton`} style={{ height: '480px', borderRadius: 'var(--radius)' }} />
       ) : (
-        <div className={styles.mapWrap} style={{ filter: mapFilter }}>
-          <MapContainer center={[50.2406, 19.1378]} zoom={12} style={{ height: '100%', width: '100%' }}>
-            <TileLayer
-              key={tileUrl}
-              url={tileUrl}
-              attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-              maxZoom={19}
-            />
-            <CityBorder borderColor={borderColor} />
-            {stations?.filter(s => s.coordinates).map(station => {
-              const st = getStatus(station.level, station.warningLevel, station.alarmLevel);
-              const c = STATUS[st]?.color ?? 'rgba(255,255,255,0.25)';
-              return (
-                <CircleMarker
-                  key={station.id}
-                  center={station.coordinates!}
-                  radius={10}
-                  color={c}
-                  fillColor={c}
-                  fillOpacity={0.35}
-                  weight={2}
-                >
-                  <Popup>
-                    <div style={{ minWidth: 200 }}>
-                      <strong style={{ fontSize: '1rem', display: 'block', marginBottom: 4 }}>{station.name}</strong>
-                      <p style={{ marginBottom: 2, fontSize: '0.85rem' }}>🏞️ {station.river}</p>
-                      <p style={{ marginBottom: 2, fontSize: '0.85rem' }}>
-                        Poziom: {station.level !== null ? `${station.level} cm` : '--'}
-                      </p>
-                      {station.warningLevel !== null && (
-                        <p style={{ marginBottom: 2, fontSize: '0.85rem', color: '#f59e0b' }}>Ostrzegawczy: {station.warningLevel} cm</p>
-                      )}
-                      {station.alarmLevel !== null && (
-                        <p style={{ marginBottom: 2, fontSize: '0.85rem', color: '#ff3b4e' }}>Alarmowy: {station.alarmLevel} cm</p>
-                      )}
-                      <Badge variant={STATUS[st].variant}>{STATUS[st].label}</Badge>
-                    </div>
-                  </Popup>
-                </CircleMarker>
-              );
-            })}
-          </MapContainer>
-        </div>
-      )}
+        <div className={styles.contentRow}>
+          <div className={styles.mapCol}>
+            {stations && stations.length > 0 && (
+              <div className={styles.mapWrap}>
+                <WaterMap stations={stations} />
+              </div>
+            )}
+          </div>
 
-      <div className={styles.listWrap}>
+          <div className={styles.listCol}>
+            <div className={styles.listWrap}>
         <h2 className={styles.listTitle}>Wszystkie stacje ({sortedStations?.length ?? 0})</h2>
         <div className={styles.list}>
           {sortedStations?.slice(0, PREVIEW).map(station => {
@@ -291,6 +247,9 @@ export default function WaterPage() {
           </>
         )}
       </div>
+        </div>
+      </div>
+      )}
 
       <Card>
         <p style={{ color: 'var(--c-muted)', fontSize: '0.88rem' }}>
