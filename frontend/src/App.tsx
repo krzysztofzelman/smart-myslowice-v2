@@ -2,6 +2,7 @@ import { useEffect, useCallback, lazy, Suspense, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Nav from './components/Nav';
+import ErrorBoundary from './components/ErrorBoundary';
 import { useTheme } from './hooks/useTheme';
 import { ThemeContext } from './ThemeContext';
 import type { Theme } from './hooks/useTheme';
@@ -67,18 +68,20 @@ export default function App() {
         <Header />
         <Nav tabs={TABS} />
         <main className={styles.main}>
-          <Suspense fallback={<PageFallback />}>
-            <Routes>
-              <Route path="/" element={<AirPage />} />
-              <Route path="/air" element={<Navigate to="/" replace />} />
-              <Route path="/aed" element={<AedPage />} />
-              <Route path="/weather" element={<WeatherPage />} />
-              <Route path="/toilets" element={<ToiletsPage />} />
-              <Route path="/eco" element={<EcoPage />} />
-              <Route path="/water" element={<WaterPage />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<PageFallback />}>
+              <Routes>
+                <Route path="/" element={<AirPage />} />
+                <Route path="/air" element={<Navigate to="/" replace />} />
+                <Route path="/aed" element={<AedPage />} />
+                <Route path="/weather" element={<WeatherPage />} />
+                <Route path="/toilets" element={<ToiletsPage />} />
+                <Route path="/eco" element={<EcoPage />} />
+                <Route path="/water" element={<WaterPage />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
+          </ErrorBoundary>
         </main>
         <footer className={styles.footer}>
           <p><strong>Smart Mysłowice</strong> — Projekt edukacyjny</p>

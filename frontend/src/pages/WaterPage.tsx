@@ -43,7 +43,7 @@ function getStatus(
 }
 
 export default function WaterPage() {
-  const { data: stations, loading, error } = useFetch<WaterLevel[]>('/api/water');
+  const { data: stations, loading, error } = useFetch<WaterLevel[]>('/api/water-level');
   const [, setFlyTo] = useState<[number, number] | null>(null);
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
@@ -80,7 +80,7 @@ export default function WaterPage() {
       },
       () => {
         setGeoLoading(false);
-        setGeoError('Nie udało się pobrać lokalizacji.');
+        setGeoError('Nie udało się pobrać lokalizacji. Sprawdź uprawnienia w ustawieniach przeglądarki.');
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );

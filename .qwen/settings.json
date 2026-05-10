@@ -19,7 +19,10 @@
       "Bash(dir *)",
       "Bash(powershell *)",
       "Bash(rd *)",
-      "Bash(npm ls *)"
+      "Bash(npm ls *)",
+      "Bash(taskkill *)",
+      "Bash(timeout *)",
+      "Bash(curl *)"
     ]
   },
   "$version": 4

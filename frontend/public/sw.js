@@ -28,6 +28,14 @@ self.addEventListener('fetch', (e) => {
   // Pass API requests through — no caching, fail gracefully when offline
   if (url.pathname.startsWith('/api')) return;
 
+  // Vite dev server handles these itself — don't intercept
+  if (
+    url.pathname.startsWith('/src/') ||
+    url.pathname.startsWith('/@vite') ||
+    url.pathname.startsWith('/@react-refresh') ||
+    url.pathname.startsWith('/node_modules/')
+  ) return;
+
   // Stale-while-revalidate for everything else
   e.respondWith(
     caches.open(CACHE).then(async (cache) => {
