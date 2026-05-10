@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import type { WaterLevel } from '../types/api';
 import { useFetch } from '../hooks/useFetch';
 import { useThemeContext } from '../ThemeContext';
+import CityBorder from '../components/CityBorder';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
 import styles from './WaterPage.module.css';
@@ -48,12 +49,15 @@ export default function WaterPage() {
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const { theme } = useThemeContext();
+  const PREVIEW = 5;
 
   const tileUrl = theme === 'dark'
     ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
     : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
   const mapFilter = theme === 'dusk' ? 'brightness(0.7)' : 'none';
+  const borderColor = theme === 'light' ? '#000000' : '#ffffff';
 
   function handleFindNearest() {
     if (!navigator.geolocation) {
@@ -95,12 +99,6 @@ export default function WaterPage() {
       })
     : stations;
 
-  function distLabel(station: WaterLevel): string | null {
-    if (!userPos || !station.coordinates) return null;
-    const d = haversineKm(userPos.lat, userPos.lng, station.coordinates[0], station.coordinates[1]);
-    if (d < 1) return `${Math.round(d * 1000)} m`;
-    return `${d.toFixed(1)} km`;
-  }
 
   const safeCount    = stations?.filter(s => getStatus(s.level, s.warningLevel, s.alarmLevel) === 'safe').length ?? 0;
   const warningCount = stations?.filter(s => getStatus(s.level, s.warningLevel, s.alarmLevel) === 'warning').length ?? 0;
@@ -177,6 +175,7 @@ export default function WaterPage() {
               attribution='&copy; <a href="https://carto.com/">CARTO</a>'
               maxZoom={19}
             />
+            <CityBorder borderColor={borderColor} />
             {stations?.filter(s => s.coordinates).map(station => {
               const st = getStatus(station.level, station.warningLevel, station.alarmLevel);
               const c = STATUS[st]?.color ?? 'rgba(255,255,255,0.25)';
@@ -213,48 +212,84 @@ export default function WaterPage() {
         </div>
       )}
 
-      <div className={styles.list}>
-        {sortedStations?.map(station => {
-          const st = getStatus(station.level, station.warningLevel, station.alarmLevel);
-          const q = STATUS[st];
-          const riskColor = getRiskColor(station.level, station.warningLevel, station.alarmLevel);
-          const measured = station.measuredAt
-            ? new Date(station.measuredAt).toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
-            : null;
-          return (
-            <Card
-              key={station.id}
-              accent={q.color}
-              onClick={station.coordinates ? () => setFlyTo(station.coordinates!) : undefined}
-              style={{ cursor: station.coordinates ? 'pointer' : 'default' }}
-            >
-              <div className={styles.row}>
-                <div className={styles.info}>
-                  <p className={styles.name}>{station.name}</p>
-                  <p className={styles.addr}>🏞️ {station.river}{station.province ? ` · ${station.province}` : ''}</p>
-                  <div className={styles.levelRow}>
-                    <div className={styles.levelBarTrack}>
-                      <div
-                        className={styles.levelBarFill}
-                        style={{ '--bar-w': `${station.level !== null && station.alarmLevel !== null ? Math.min(station.level / station.alarmLevel, 1) * 100 : 0}%`, backgroundColor: riskColor } as React.CSSProperties}
-                      />
-                    </div>
-                    <span className={styles.levelVal} style={{ color: riskColor }}>
-                      {station.level !== null ? `${station.level} cm` : '--'}
+      <div className={styles.listWrap}>
+        <h2 className={styles.listTitle}>Wszystkie stacje ({sortedStations?.length ?? 0})</h2>
+        <div className={styles.list}>
+          {sortedStations?.slice(0, PREVIEW).map(station => {
+            const st = getStatus(station.level, station.warningLevel, station.alarmLevel);
+            const q = STATUS[st];
+            const riskColor = getRiskColor(station.level, station.warningLevel, station.alarmLevel);
+            return (
+              <button
+                key={station.id}
+                className={styles.listItem}
+                onClick={station.coordinates ? () => setFlyTo(station.coordinates!) : undefined}
+              >
+                <div className={styles.listMain}>
+                  <span className={styles.listName}>
+                    {station.name}
+                    <span className={styles.listRiver}>🏞️ {station.river}</span>
+                  </span>
+                  {station.measuredAt && (
+                    <span className={styles.listAddr}>
+                      📡 {new Date(station.measuredAt).toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                     </span>
-                  </div>
-                  <div className={styles.thresholds}>
-                    {station.warningLevel !== null && <span className={styles.threshold}>Ostrzegawczy: {station.warningLevel} cm</span>}
-                    {station.alarmLevel !== null && <span className={styles.threshold}>Alarmowy: {station.alarmLevel} cm</span>}
-                  </div>
-                  {measured && <span className={styles.measuredAt}>📡 {measured}</span>}
-                  {distLabel(station) && <span className={styles.distLabel}>📍 {distLabel(station)} od Ciebie</span>}
+                  )}
                 </div>
-                <Badge variant={q.variant}>{q.label}</Badge>
+                <div className={styles.listRight}>
+                  <span className={styles.levelVal} style={{ color: riskColor }}>
+                    {station.level !== null ? `${station.level} cm` : '--'}
+                  </span>
+                  <Badge variant={q.variant}>{q.label}</Badge>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        {sortedStations && sortedStations.length > PREVIEW && (
+          <>
+            <div
+              className={styles.listExtra}
+              style={{ maxHeight: expanded ? `${(sortedStations.length - PREVIEW) * 90}px` : '0' }}
+            >
+              <div className={styles.list} style={{ paddingTop: '0.4rem' }}>
+                {sortedStations.slice(PREVIEW).map(station => {
+                  const st = getStatus(station.level, station.warningLevel, station.alarmLevel);
+                  const q = STATUS[st];
+                  const riskColor = getRiskColor(station.level, station.warningLevel, station.alarmLevel);
+                  return (
+                    <button
+                      key={station.id}
+                      className={styles.listItem}
+                      onClick={station.coordinates ? () => setFlyTo(station.coordinates!) : undefined}
+                    >
+                      <div className={styles.listMain}>
+                        <span className={styles.listName}>
+                          {station.name}
+                          <span className={styles.listRiver}>🏞️ {station.river}</span>
+                        </span>
+                        {station.measuredAt && (
+                          <span className={styles.listAddr}>
+                            📡 {new Date(station.measuredAt).toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        )}
+                      </div>
+                      <div className={styles.listRight}>
+                        <span className={styles.levelVal} style={{ color: riskColor }}>
+                          {station.level !== null ? `${station.level} cm` : '--'}
+                        </span>
+                        <Badge variant={q.variant}>{q.label}</Badge>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
-            </Card>
-          );
-        })}
+            </div>
+            <button className={styles.toggleBtn} onClick={() => setExpanded(e => !e)}>
+              {expanded ? '▲ Zwiń' : `▼ Pokaż wszystkie (${sortedStations.length})`}
+            </button>
+          </>
+        )}
       </div>
 
       <Card>

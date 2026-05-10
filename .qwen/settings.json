@@ -22,7 +22,10 @@
       "Bash(npm ls *)",
       "Bash(taskkill *)",
       "Bash(timeout *)",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "Bash(netstat *)",
+      "Bash(echo.)",
+      "Bash(type *)"
     ]
   },
   "$version": 4

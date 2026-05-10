@@ -48,8 +48,13 @@ for (const file of files) {
 
   app.all(route, async (req, res) => {
     try {
+      const start = Date.now();
+      console.log(`  → ${req.method} ${route}`);
       await handler(req, res);
+      console.log(`  ← ${req.method} ${route} ${res.statusCode} (${Date.now() - start}ms)`);
     } catch (err) {
+      console.error(`  ✗ ${req.method} ${route} — NIEOCZEKIWANY BŁĄD: ${err.message}`);
+      console.error(err.stack?.split('\n').slice(0, 6).join('\n') || err.stack);
       if (!res.headersSent) {
         res.status(500).json({ error: err.message });
       }

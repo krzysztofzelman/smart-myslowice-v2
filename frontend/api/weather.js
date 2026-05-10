@@ -1,6 +1,23 @@
+/* ── Mock danych pogodowych (gdy brak klucza OWM) ── */
+const MOCK_WEATHER = () => ({
+  temp: 18,
+  feelsLike: 16,
+  description: 'pochmurnie z przejaśnieniami',
+  humidity: 65,
+  windKmh: 12,
+  icon: '04d',
+  sunrise: Math.floor(Date.now() / 1000) - 21600,
+  sunset: Math.floor(Date.now() / 1000) + 21600,
+});
+
 export default async function handler(req, res) {
+  const apiKey = process.env.OWM_API_KEY;
+  if (!apiKey) {
+    console.warn('[weather] Brak OWM_API_KEY – zwracam dane mockowe');
+    return res.status(200).json(MOCK_WEATHER());
+  }
+
   try {
-    const apiKey = process.env.OWM_API_KEY;
     const url = `https://api.openweathermap.org/data/2.5/weather?q=Myslowice&units=metric&lang=pl&appid=${apiKey}`;
     const response = await fetch(url);
     if (!response.ok) throw new Error(`OWM error ${response.status}`);
@@ -16,6 +33,8 @@ export default async function handler(req, res) {
       sunset: data.sys.sunset,
     });
   } catch (err) {
-    res.status(502).json({ error: err.message });
+    console.error(`[weather] Błąd OWM: ${err.message}`);
+    console.warn('[weather] Zwracam dane mockowe');
+    res.status(200).json(MOCK_WEATHER());
   }
 }

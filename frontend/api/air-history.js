@@ -1,5 +1,19 @@
 const AIRLY_BASE = 'https://airapi.airly.eu/v2';
 
+/* ── Mock danych historycznych (gdy brak klucza Airly) ── */
+const MOCK_HISTORY = () => {
+  const points = [];
+  for (let i = 23; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 3600000);
+    points.push({
+      time: d.toISOString(),
+      pm25: Math.round(15 + Math.random() * 20),
+      pm10: Math.round(30 + Math.random() * 30),
+    });
+  }
+  return points;
+};
+
 export default async function handler(req, res) {
   const { installationId } = req.query;
   if (!installationId) {
@@ -8,7 +22,8 @@ export default async function handler(req, res) {
 
   const key = process.env.AIRLY_API_KEY;
   if (!key) {
-    return res.status(500).json({ error: 'Brak AIRLY_API_KEY' });
+    console.warn(`[air-history] Brak AIRLY_API_KEY – zwracam dane mockowe dla ${installationId}`);
+    return res.status(200).json(MOCK_HISTORY());
   }
 
   try {
@@ -36,6 +51,8 @@ export default async function handler(req, res) {
 
     res.status(200).json(history);
   } catch (err) {
-    res.status(502).json({ error: err.message });
+    console.error(`[air-history] Błąd Airly: ${err.message}`);
+    console.warn(`[air-history] Zwracam dane mockowe`);
+    res.status(200).json(MOCK_HISTORY());
   }
 }

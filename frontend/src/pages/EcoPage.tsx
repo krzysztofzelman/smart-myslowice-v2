@@ -47,7 +47,11 @@ export default function EcoPage() {
           </h3>
           <div className={styles.list}>
             {grouped[type].slice(0, PREVIEW).map(p => (
-              <Card key={p.id}>
+              <Card 
+                key={p.id} 
+                onClick={() => p.coordinates && window.open(`https://www.google.com/maps/dir/?api=1&destination=${p.coordinates.lat},${p.coordinates.lng}`)}
+                style={{ cursor: p.coordinates ? 'pointer' : 'default' }}
+              >
                 <div className={styles.row}>
                   <div className={styles.info}>
                     <p className={styles.name}>{p.name}</p>
@@ -69,7 +73,11 @@ export default function EcoPage() {
               >
                 <div className={styles.list} style={{ paddingTop: '0.4rem' }}>
                   {grouped[type].slice(PREVIEW).map(p => (
-                    <Card key={p.id}>
+                    <Card 
+                      key={p.id} 
+                      onClick={() => p.coordinates && window.open(`https://www.google.com/maps/dir/?api=1&destination=${p.coordinates.lat},${p.coordinates.lng}`)}
+                      style={{ cursor: p.coordinates ? 'pointer' : 'default' }}
+                    >
                       <div className={styles.row}>
                         <div className={styles.info}>
                           <p className={styles.name}>{p.name}</p>

@@ -64,7 +64,8 @@ export default async function handler(req, res) {
     cacheTs = Date.now();
     res.status(200).json(stops);
   } catch (err) {
-    console.warn('[transit-stops]', err.message);
+    console.error(`[transit-stops] Błąd GTFS: ${err.message}`);
+    console.warn('[transit-stops] Zwracam dane z cache');
     res.status(200).json(cache ?? []);
   }
 }

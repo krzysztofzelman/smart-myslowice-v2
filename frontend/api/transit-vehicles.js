@@ -122,7 +122,8 @@ export default async function handler(req, res) {
     vehiclesCacheTs = Date.now();
     res.status(200).json(vehicles);
   } catch (err) {
-    console.warn('[transit-vehicles]', err.message);
+    console.error(`[transit-vehicles] Błąd GTFS-RT: ${err.message}`);
+    console.warn('[transit-vehicles] Zwracam dane z cache');
     res.status(200).json(vehiclesCache ?? []);
   }
 }

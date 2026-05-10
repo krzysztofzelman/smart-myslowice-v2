@@ -6,6 +6,8 @@ export interface UseFetchResult<T> {
   error: string | null;
 }
 
+const SERVER_ERROR_MSG = 'Nie można pobrać danych. Serwer tymczasowo niedostępny. Spróbuj za kilka minut.';
+
 export function useFetch<T = unknown>(url: string): UseFetchResult<T> {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
@@ -21,7 +23,13 @@ export function useFetch<T = unknown>(url: string): UseFetchResult<T> {
 
     fetch(url, { signal: controller.signal })
       .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        if (!r.ok) {
+          if (r.status >= 500 && r.status < 600) {
+            console.warn(`[useFetch] ${url} — serwer zwrócił ${r.status} (${r.statusText})`);
+            throw new Error(SERVER_ERROR_MSG);
+          }
+          throw new Error(`HTTP ${r.status}`);
+        }
         return r.json() as Promise<T>;
       })
       .then((d) => {
@@ -33,10 +41,12 @@ export function useFetch<T = unknown>(url: string): UseFetchResult<T> {
       .catch((e: Error) => {
         if (!cancelled) {
           if (e.name === 'AbortError') {
+            console.warn(`[useFetch] ${url} — timeout (10s)`);
             setError('Timeout — serwer nie odpowiada');
-          } else {
-            setError(e.message);
+          } else if (e.message !== SERVER_ERROR_MSG) {
+            console.warn(`[useFetch] ${url} — ${e.message}`);
           }
+          setError(e.message);
           setLoading(false);
         }
       });

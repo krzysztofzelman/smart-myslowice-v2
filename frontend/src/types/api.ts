@@ -54,6 +54,7 @@ export interface EcoPoint {
   hours: string;
   phone: string;
   accepts: string;
+  coordinates?: { lat: number; lng: number };
 }
 
 export interface WaterLevel {

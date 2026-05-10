@@ -82,7 +82,11 @@ export default async function handler(req, res) {
     cacheTs = Date.now();
     res.status(200).json(filtered);
   } catch (e) {
-    if (cache) return res.status(200).json(cache);
+    console.error(`[water-level] Błąd IMGW: ${e.message}`);
+    if (cache) {
+      console.warn('[water-level] Zwracam dane z cache');
+      return res.status(200).json(cache);
+    }
     res.status(502).json({ error: e.message });
   }
 }

@@ -223,7 +223,7 @@ export default function AirPage() {
       {error   && <p style={{ color: 'var(--c-red)' }}>Błąd: {error}</p>}
 
       <div className={styles.grid}>
-        {(sensors ?? []).map(s => (
+        {(sensors ?? []).filter(s => s.pm25 !== null || s.pm10 !== null).map(s => (
           <SensorCard
             key={s.id}
             s={s}
