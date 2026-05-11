@@ -41,10 +41,10 @@ export default function WeatherPage() {
           <div className={styles.heroMain}>
             {loading ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                <div className={`skeleton`} style={{ width: '4rem', height: '4rem', borderRadius: '50%' }} />
+                <div className="skeleton" style={{ width: '4rem', height: '4rem', borderRadius: '50%' }} />
                 <div>
-                  <div className={`skeleton`} style={{ width: '8rem', height: '3rem', marginBottom: '0.5rem' }} />
-                  <div className={`skeleton`} style={{ width: '10rem', height: '1.2rem' }} />
+                  <div className="skeleton" style={{ width: '8rem', height: '3rem', marginBottom: '0.5rem' }} />
+                  <div className="skeleton" style={{ width: '10rem', height: '1.2rem' }} />
                 </div>
               </div>
             ) : (

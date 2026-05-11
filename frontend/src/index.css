@@ -84,12 +84,20 @@ body {
 .leaflet-popup-close-button { color: var(--c-muted) !important; }
 
 /* ── Globalna tranzycja tokenów kolorów ─────────────────────────────────── */
-*, *::before, *::after {
+/* Ograniczona do głównych kontenerów — unika spadków FPS na setkach elementów. */
+body,
+#root,
+.app,
+.header,
+.nav,
+.page,
+[class*="page"],
+[class*="header"],
+[class*="nav"] {
   transition:
     background-color 2s ease,
     border-color     2s ease,
-    color            1s ease,
-    box-shadow       2s ease;
+    color            1s ease;
 }
 
 /* ── Skeleton loading ──────────────────────────────────────────────────── */

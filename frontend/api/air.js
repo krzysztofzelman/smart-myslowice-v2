@@ -192,8 +192,11 @@ export default async function handler(req, res) {
 
   if (data.length === 0) {
     console.warn('[air] Oba źródła niedostępne – zwracam dane mockowe');
-    return res.status(200).json(MOCK_SENSORS());
+    const mock = MOCK_SENSORS();
+    mock._mock = true;
+    return res.status(200).json(mock);
   }
 
+  data._mock = false;
   res.status(200).json(data);
 }

@@ -1,49 +1,16 @@
 import { useState } from 'react';
 import type { WaterLevel } from '../types/api';
 import { useFetch } from '../hooks/useFetch';
+import { haversineKm } from '../utils/geo';
+import { getWaterStatus, getRiskColor, WATER_STATUS } from '../utils/waterStatus';
 import WaterMap from '../components/WaterMap';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
 import styles from './WaterPage.module.css';
 
-function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371;
-  const d2r = Math.PI / 180;
-  const dLat = (lat2 - lat1) * d2r;
-  const dLng = (lng2 - lng1) * d2r;
-  const a = Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1 * d2r) * Math.cos(lat2 * d2r) * Math.sin(dLng / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-const STATUS: Record<string, { label: string; variant: 'green' | 'amber' | 'red' | 'muted'; color: string }> = {
-  safe:    { label: 'Bezpieczny',       variant: 'green', color: '#22d3a5' },
-  warning: { label: 'Ostrzeżenie',      variant: 'amber', color: '#f59e0b' },
-  danger:  { label: 'Niebezpieczny',    variant: 'red',   color: '#ff3b4e' },
-  unknown: { label: 'Brak danych',      variant: 'muted', color: 'rgba(255,255,255,0.25)' },
-};
-
-function getRiskColor(level: number | null, warning: number | null, alarm: number | null): string {
-  if (level === null) return 'rgba(255,255,255,0.25)';
-  if (alarm !== null && level >= alarm) return '#ff3b4e';
-  if (warning !== null && level >= warning) return '#f59e0b';
-  return '#22d3a5';
-}
-
-function getStatus(
-  level: number | null,
-  warning: number | null,
-  alarm: number | null
-): 'safe' | 'warning' | 'danger' | 'unknown' {
-  if (level === null) return 'unknown';
-  if (alarm !== null && level >= alarm) return 'danger';
-  if (warning !== null && level >= warning) return 'warning';
-  return 'safe';
-}
-
 export default function WaterPage() {
   const { data: stations, loading, error } = useFetch<WaterLevel[]>('/api/water-level');
-  const [, setFlyTo] = useState<[number, number] | null>(null);
+  const [flyTo, setFlyTo] = useState<[number, number] | null>(null);
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
@@ -91,9 +58,9 @@ export default function WaterPage() {
     : stations;
 
 
-  const safeCount    = stations?.filter(s => getStatus(s.level, s.warningLevel, s.alarmLevel) === 'safe').length ?? 0;
-  const warningCount = stations?.filter(s => getStatus(s.level, s.warningLevel, s.alarmLevel) === 'warning').length ?? 0;
-  const dangerCount  = stations?.filter(s => getStatus(s.level, s.warningLevel, s.alarmLevel) === 'danger').length ?? 0;
+  const safeCount    = stations?.filter(s => getWaterStatus(s.level, s.warningLevel, s.alarmLevel) === 'safe').length ?? 0;
+  const warningCount = stations?.filter(s => getWaterStatus(s.level, s.warningLevel, s.alarmLevel) === 'warning').length ?? 0;
+  const dangerCount  = stations?.filter(s => getWaterStatus(s.level, s.warningLevel, s.alarmLevel) === 'danger').length ?? 0;
 
   return (
     <div className={styles.page}>
@@ -162,7 +129,7 @@ export default function WaterPage() {
           <div className={styles.mapCol}>
             {stations && stations.length > 0 && (
               <div className={styles.mapWrap}>
-                <WaterMap stations={stations} />
+                <WaterMap stations={stations} flyTo={flyTo} onFlyDone={() => setFlyTo(null)} />
               </div>
             )}
           </div>
@@ -172,8 +139,8 @@ export default function WaterPage() {
         <h2 className={styles.listTitle}>Wszystkie stacje ({sortedStations?.length ?? 0})</h2>
         <div className={styles.list}>
           {sortedStations?.slice(0, PREVIEW).map(station => {
-            const st = getStatus(station.level, station.warningLevel, station.alarmLevel);
-            const q = STATUS[st];
+            const st = getWaterStatus(station.level, station.warningLevel, station.alarmLevel);
+            const q = WATER_STATUS[st];
             const riskColor = getRiskColor(station.level, station.warningLevel, station.alarmLevel);
             return (
               <button
@@ -210,8 +177,8 @@ export default function WaterPage() {
             >
               <div className={styles.list} style={{ paddingTop: '0.4rem' }}>
                 {sortedStations.slice(PREVIEW).map(station => {
-                  const st = getStatus(station.level, station.warningLevel, station.alarmLevel);
-                  const q = STATUS[st];
+                  const st = getWaterStatus(station.level, station.warningLevel, station.alarmLevel);
+                  const q = WATER_STATUS[st];
                   const riskColor = getRiskColor(station.level, station.warningLevel, station.alarmLevel);
                   return (
                     <button

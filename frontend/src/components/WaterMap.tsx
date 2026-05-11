@@ -1,33 +1,31 @@
-import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
+import { useEffect } from 'react';
+import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import type { WaterLevel } from '../types/api';
 import { useThemeContext } from '../ThemeContext';
 import { getStationCoordinates } from '../data/stationCoordinates';
+import { getWaterStatus, WATER_STATUS } from '../utils/waterStatus';
 import CityBorder from './CityBorder';
 import Badge from './Badge';
 
-/* ─── Status helpers (duplicated from WaterPage to keep this component independent) ─── */
+/* ─── FlyTo — podąża za wybraną stacją z listy ─── */
 
-const STATUS: Record<string, { label: string; variant: 'green' | 'amber' | 'red' | 'muted'; color: string }> = {
-  safe:    { label: 'Bezpieczny',       variant: 'green', color: '#22d3a5' },
-  warning: { label: 'Ostrzeżenie',      variant: 'amber', color: '#f59e0b' },
-  danger:  { label: 'Niebezpieczny',    variant: 'red',   color: '#ff3b4e' },
-  unknown: { label: 'Brak danych',      variant: 'muted', color: 'rgba(255,255,255,0.25)' },
-};
-
-function getStatus(level: number | null, warning: number | null, alarm: number | null): 'safe' | 'warning' | 'danger' | 'unknown' {
-  if (level === null) return 'unknown';
-  if (alarm !== null && level >= alarm) return 'danger';
-  if (warning !== null && level >= warning) return 'warning';
-  return 'safe';
+function FlyTo({ coords }: { coords: [number, number] | null }) {
+  const map = useMap();
+  useEffect(() => {
+    if (coords) map.flyTo(coords, 12, { duration: 1 });
+  }, [coords, map]);
+  return null;
 }
 
 /* ─── Component ─── */
 
 interface WaterMapProps {
   stations: WaterLevel[];
+  flyTo?: [number, number] | null;
+  onFlyDone?: () => void;
 }
 
-export default function WaterMap({ stations }: WaterMapProps) {
+export default function WaterMap({ stations, flyTo, onFlyDone }: WaterMapProps) {
   const { theme } = useThemeContext();
 
   const tileUrl = theme === 'dark'
@@ -69,11 +67,12 @@ export default function WaterMap({ stations }: WaterMapProps) {
           maxZoom={19}
         />
         <CityBorder borderColor={borderColor} />
+        {flyTo && <FlyTo coords={flyTo} />}
 
         {stationsWithCoords.map(station => {
           const coords = resolveCoords(station)!;
-          const st = getStatus(station.level, station.warningLevel, station.alarmLevel);
-          const c = STATUS[st]?.color ?? 'rgba(255,255,255,0.25)';
+          const st = getWaterStatus(station.level, station.warningLevel, station.alarmLevel);
+          const c = WATER_STATUS[st]?.color ?? 'rgba(255,255,255,0.25)';
 
           return (
             <CircleMarker
@@ -109,7 +108,7 @@ export default function WaterMap({ stations }: WaterMapProps) {
                       Alarmowy: {station.alarmLevel} cm
                     </p>
                   )}
-                  <Badge variant={STATUS[st].variant}>{STATUS[st].label}</Badge>
+                  <Badge variant={WATER_STATUS[st].variant}>{WATER_STATUS[st].label}</Badge>
                 </div>
               </Popup>
             </CircleMarker>

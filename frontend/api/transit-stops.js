@@ -35,6 +35,10 @@ function parseCsv(text) {
 }
 
 export default async function handler(req, res) {
+  /* Endpoint nieużywany – TransitPage został usunięty (2025-01). */
+  return res.status(410).json({ error: 'TransitPage removed', _disabled: true });
+
+  /* eslint-disable-next-line */
   if (cache && Date.now() - cacheTs < TTL) {
     return res.status(200).json(cache);
   }

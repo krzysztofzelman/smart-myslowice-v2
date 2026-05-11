@@ -23,7 +23,9 @@ export default async function handler(req, res) {
   const key = process.env.AIRLY_API_KEY;
   if (!key) {
     console.warn(`[air-history] Brak AIRLY_API_KEY – zwracam dane mockowe dla ${installationId}`);
-    return res.status(200).json(MOCK_HISTORY());
+    const mock = MOCK_HISTORY();
+    mock._mock = true;
+    return res.status(200).json(mock);
   }
 
   try {
@@ -49,10 +51,13 @@ export default async function handler(req, res) {
       };
     });
 
+    history._mock = false;
     res.status(200).json(history);
   } catch (err) {
     console.error(`[air-history] Błąd Airly: ${err.message}`);
     console.warn(`[air-history] Zwracam dane mockowe`);
-    res.status(200).json(MOCK_HISTORY());
+    const mock = MOCK_HISTORY();
+    mock._mock = true;
+    res.status(200).json(mock);
   }
 }

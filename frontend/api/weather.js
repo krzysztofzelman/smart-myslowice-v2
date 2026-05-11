@@ -14,7 +14,9 @@ export default async function handler(req, res) {
   const apiKey = process.env.OWM_API_KEY;
   if (!apiKey) {
     console.warn('[weather] Brak OWM_API_KEY – zwracam dane mockowe');
-    return res.status(200).json(MOCK_WEATHER());
+    const mock = MOCK_WEATHER();
+    mock._mock = true;
+    return res.status(200).json(mock);
   }
 
   try {
@@ -22,7 +24,7 @@ export default async function handler(req, res) {
     const response = await fetch(url);
     if (!response.ok) throw new Error(`OWM error ${response.status}`);
     const data = await response.json();
-    res.status(200).json({
+    const result = {
       temp: Math.round(data.main.temp),
       feelsLike: Math.round(data.main.feels_like),
       description: data.weather[0].description,
@@ -31,10 +33,14 @@ export default async function handler(req, res) {
       icon: data.weather[0].icon,
       sunrise: data.sys.sunrise,
       sunset: data.sys.sunset,
-    });
+      _mock: false,
+    };
+    res.status(200).json(result);
   } catch (err) {
     console.error(`[weather] Błąd OWM: ${err.message}`);
     console.warn('[weather] Zwracam dane mockowe');
-    res.status(200).json(MOCK_WEATHER());
+    const mock = MOCK_WEATHER();
+    mock._mock = true;
+    res.status(200).json(mock);
   }
 }

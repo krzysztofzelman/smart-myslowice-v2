@@ -216,7 +216,7 @@ export default function AirPage() {
       {loading && (
         <div className={styles.grid}>
           {[1,2,3,4].map(i => (
-            <div key={i} className={`skeleton`} style={{ height: '14rem', borderRadius: 'var(--radius)' }} />
+            <div key={i} className="skeleton" style={{ height: '14rem', borderRadius: 'var(--radius)' }} />
           ))}
         </div>
       )}

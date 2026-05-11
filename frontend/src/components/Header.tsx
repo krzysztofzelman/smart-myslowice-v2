@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useThemeContext } from '../ThemeContext';
-import { OWM_ICONS } from '../constants.js';
+import { OWM_ICONS } from '../constants';
 import styles from './Header.module.css';
 
 const THEME_LABEL: Record<string, string> = {

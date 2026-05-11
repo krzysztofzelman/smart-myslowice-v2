@@ -4,11 +4,12 @@ import L from 'leaflet';
 import type { AedLocation } from '../types/api';
 import { useFetch } from '../hooks/useFetch';
 import { useThemeContext } from '../ThemeContext';
+import { haversineKm } from '../utils/geo';
+import CityBorder from '../components/CityBorder';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
 import styles from './AedPage.module.css';
 
-// delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -35,54 +36,7 @@ function FlyTo({ coords }: FlyToProps) {
   return null;
 }
 
-interface CityBorderProps {
-  borderColor: string;
-}
-
-function CityBorder({ borderColor }: CityBorderProps) {
-  const map = useMap();
-  const layerRef = useRef<L.GeoJSON | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const url = 'https://nominatim.openstreetmap.org/search?' +
-      new URLSearchParams({ q: 'Mysłowice, Poland', polygon_geojson: '1', format: 'json', limit: '1' });
-    fetch(url)
-      .then(r => r.json())
-      .then((data: Record<string, unknown>[]) => {
-        if (cancelled) return;
-        const geo = (data?.[0] as Record<string, unknown> | undefined)?.geojson;
-        if (!geo) return;
-        const layer = L.geoJSON({ type: 'Feature', geometry: geo } as GeoJSON.Feature, {
-          style: { color: borderColor, weight: 2, fillOpacity: 0 },
-        }).addTo(map);
-        layerRef.current = layer;
-      })
-      .catch((err: Error) => console.warn('[CityBorder]', err));
-    return () => {
-      cancelled = true;
-      if (layerRef.current) { map.removeLayer(layerRef.current); layerRef.current = null; }
-    };
-  }, [map, borderColor]);
-
-  useEffect(() => {
-    layerRef.current?.setStyle({ color: borderColor });
-  }, [borderColor]);
-
-  return null;
-}
-
 const PREVIEW = 5;
-
-function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371;
-  const d2r = Math.PI / 180;
-  const dLat = (lat2 - lat1) * d2r;
-  const dLng = (lng2 - lng1) * d2r;
-  const a = Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1 * d2r) * Math.cos(lat2 * d2r) * Math.sin(dLng / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
 
 export default function AedPage() {
   const { data: locations, loading, error } = useFetch<AedLocation[]>('/api/aed');
