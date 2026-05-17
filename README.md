@@ -6,7 +6,7 @@
 [![Leaflet](https://img.shields.io/badge/Leaflet-1.9-199900?logo=leaflet)](https://leafletjs.com)
 [![ESLint](https://img.shields.io/badge/ESLint-10-4B32C3?logo=eslint)](https://eslint.org)
 [![Vercel](https://img.shields.io/badge/Vercel-Deployed-000?logo=vercel)](https://vercel.com)
-[![Testy](https://img.shields.io/badge/Testy-19_passing-22d3a5)](#testy)
+[![Testy](https://img.shields.io/badge/Testy-42_passing-22d3a5)](#testy)
 [![Licencja](https://img.shields.io/badge/Licencja-MIT-green)](LICENSE)
 
 **Smart Mysłowice** to nowoczesna, responsywna aplikacja webowa typu dashboard, agregująca dane miejskie dla Mysłowic w czasie rzeczywistym. Łączy informacje z wielu źródeł — GIOŚ, Airly, OpenWeatherMap, IMGW, OpenStreetMap oraz zbiory statyczne — w jednym interfejsie z mapami, wykresami i automatycznym motywem dnia/zmierzchu/nocy.
@@ -62,6 +62,7 @@
 | Git hooks | [Husky](https://typicode.github.io/husky) + [lint-staged](https://github.com/lint-staged/lint-staged) | ^9.1.7 / ^17.0.4 |
 | Monitorowanie błędów | [Sentry](https://sentry.io) (opcjonalnie, wymaga `VITE_SENTRY_DSN`) | ^10.52.0 |
 | Stylowanie | [CSS Modules](https://github.com/css-modules/css-modules) + CSS Custom Properties (motywy) | — |
+| Asystent AI | Rules-based engine (intent matching) + opcjonalny LLM (OpenAI / Anthropic / Ollama) | — |
 | Backend/API | Vercel Serverless Functions (Node.js ESM) + `dev-api-server.mjs` (lokalnie) | — |
 | Geokodowanie | [Nominatim](https://nominatim.openstreetmap.org) (OpenStreetMap) dla granicy miasta | — |
 | Deployment | [Vercel](https://vercel.com) | — |
@@ -228,9 +229,10 @@ smart-myslowice/
 │   │       ├── AedPage.test.jsx           #   1 test: renderowanie strony AED
 │   │       ├── AirPage.test.jsx           #   1 test: renderowanie strony powietrza
 │   │       ├── ErrorBoundary.test.jsx     #   3 testy: granica błędu
-│   │       ├── AIAssistant.test.tsx       #   9 testów: renderowanie, wysyłanie, odpowiedź, błąd, loading
+│   │       ├── AIAssistant.test.tsx       #   10 testów: renderowanie, wysyłanie, odpowiedź, błąd, dostępność, nawigacja
 │   │       └── api/
-│   │           └── ai-assistant.test.js   #   13 testów: walidacja, intencje, API data, rate limiting
+│   │           └── ai-assistant.test.js   #   14 testów: walidacja, intencje, API data, rate limiting
+│   ├── .env.example                      #   Przykład zmiennych środowiskowych (API keys, AI)
 │   ├── dev-api-server.mjs                #   Lokalny serwer API (Express, wczytuje api/*.js)
 │   ├── .husky/
 │   │   └── pre-commit                    #   Hook: lint-staged (ESLint + Prettier)
@@ -303,18 +305,18 @@ npx vitest --ui
 npx vitest
 ```
 
-**Stan testów (41 testów w 8 plikach):**
+**Wynik testów (43 testy, 42 ✅ / 1 ❌ w 8 plikach):**
 
 | Plik | Testy | Opis |
 |---|---|---|
-| `useFetch.test.jsx` | 6 | Stan ładowania, dane, błąd HTTP, błąd sieci, timeout, cleanup po unmount |
+| `useFetch.test.jsx` | 6 | Stan ładowania, dane, błąd HTTP, błąd sieci, timeout _(znany błąd:złe dopasowanie komunikatu)_, cleanup po unmount |
 | `Card.test.jsx` | 5 | Renderowanie dzieci, kolor akcentu, className, tytuł, style inline |
 | `Badge.test.jsx` | 3 | Renderowanie treści, domyślny wariant, klasa dla wariantu |
 | `ErrorBoundary.test.jsx` | 3 | Łapanie błędów, renderowanie fallbacku, props children |
 | `AedPage.test.jsx` | 1 | Renderowanie strony z listą defibrylatorów |
 | `AirPage.test.jsx` | 1 | Renderowanie strony z danymi o jakości powietrza |
-| `AIAssistant.test.tsx` | 9 | Przycisk, panel, wysyłanie zapytania, odpowiedź, wskaźnik pisania, błąd, dostępność, nawigacja |
-| `api/ai-assistant.test.js` | 13 | Walidacja metody/metoda, pole query, długość znaków, intencje (powitanie, pomoc, powietrze, pogoda, AED, toalety, eko, woda, nieznane), błędy API |
+| `AIAssistant.test.tsx` | 10 | Przycisk, panel, wysyłanie zapytania, odpowiedź, wskaźnik pisania, błąd, dostępność, nawigacja |
+| `api/ai-assistant.test.js` | 14 | Walidacja metody/pola/długości, intencje (powitanie, pomoc, powietrze, pogoda, AED z/bez koordynatów, toalety, eko, woda, nieznane), błędy API |
 
 ---
 
@@ -337,6 +339,12 @@ npx vitest
 ## Wkład w projekt
 
 Chcesz pomóc rozwijać Smart Mysłowice? Świetnie! Oto kilka obszarów, w których możesz się zaangażować:
+
+### 🤖 Asystent AI
+- **Integracja z zewnętrznym LLM** — odblokuj pełny potencjał asystenta przez ustawienie `AI_API_KEY`. Obecnie kod zawiera gotową integrację z OpenAI, Anthropic i Ollama (wystarczy zmienić `if (false && process.env.AI_API_KEY)` na `if (process.env.AI_API_KEY)` w `api/ai-assistant.js`).
+- **Odpowiedzi głosowe** — dodanie syntezy mowy (Web Speech API) do odczytywania odpowiedzi asystenta.
+- **Nowe intencje** — rozszerzenie rules-based engine o zapytania dotyczące transportu miejskiego, zabytków i wydarzeń w Mysłowicach.
+- **Zapamiętywanie konwersacji** — dodanie kontekstu sesji (krótkotrwała pamięć ostatnich pytań) dla bardziej naturalnych rozmów.
 
 ### 🐛 Zgłaszanie błędów
 - Otwórz issue w repozytorium GitHub
