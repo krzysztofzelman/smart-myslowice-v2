@@ -33,6 +33,7 @@
 | 🚻 | **Toalety publiczne** | Lista toalet miejskich z informacją o dostępie i opłatach | Dane statyczne |
 | ♻️ | **Eko-punkty (PSZOK)** | Punkty selektywnej zbiórki odpadów pogrupowane według typu, z godzinami otwarcia i listą przyjmowanych materiałów | Dane statyczne |
 | 🚌 | **Transport** | (W przygotowaniu) Przystanki i pojazdy komunikacji miejskiej na żywo z GTFS-RT | [Transport GZM](https://www.metropoliaztm.pl) |
+| 🤖 | **Asystent AI** | Asystent odpowiadający na pytania w języku naturalnym o dane miejskie. Rozumie pytania o jakość powietrza, AED, pogodę, toalety, PSZOK, stan wód. Działa w trybie rules-based (offline) lub z integracją zewnętrznego modelu LLM (OpenAI, Anthropic, Ollama). Zwijany czat w prawym dolnym rogu, z historią konwersacji i linkami do szczegółów. | Wbudowany silnik reguł + opcjonalnie zewnętrzny LLM |
 
 ### Cechy wspólne
 
@@ -128,6 +129,9 @@ Plik `.env` (lub `.env.local`) w katalogu `frontend/`:
 | `OWM_API_KEY` | ❌ (mock) | [OpenWeatherMap](https://openweathermap.org/api) | Klucz API do pobierania aktualnej pogody. Bez klucza zwracane są dane mockowe. |
 | `AIRLY_API_KEY` | ❌ (mock) | [Airly](https://developer.airly.org) | Klucz API do danych o jakości powietrza. Bez klucza zwracane są dane mockowe. |
 | `VITE_SENTRY_DSN` | ❌ | [Sentry](https://sentry.io) | DSN do monitorowania błędów w produkcji. |
+| `AI_API_KEY` | ❌ (rules-based) | OpenAI / Anthropic / inny | Klucz API do zewnętrznego modelu językowego (LLM). Bez klucza asystent działa w trybie rules-based (offline, bez zewnętrznego API). |
+| `AI_MODEL` | ❌ | OpenAI / Anthropic / Ollama | Nazwa modelu, np. `gpt-3.5-turbo`, `gpt-4`, `claude-3-haiku`. Domyślnie: `gpt-3.5-turbo`. |
+| `AI_API_URL` | ❌ | Dowolny | URL endpointu API (dla OpenAI: `https://api.openai.com/v1/chat/completions`, dla Ollama lokalnie: `http://localhost:11434/v1/chat/completions`). Domyślnie: `https://api.openai.com/v1/chat/completions`. |
 
 > Wszystkie strony działają w pełni bez kluczy API — brakujące dane są zastępowane danymi mockowymi. Jedynie dane IMGW (stan wód) są pobierane z publicznego API bez klucza.
 
@@ -157,6 +161,7 @@ smart-myslowice/
 ├── frontend/                              # Główna aplikacja (React + Vite + TypeScript)
 │   ├── api/                               # Vercel Serverless Functions (Node.js ESM)
 │   │   ├── aed.js                         #   Statyczne dane AED (14 defibrylatorów)
+│   │   ├── ai-assistant.js                #   Asystent AI (rules-based + opcjonalny LLM, rate limiting)
 │   │   ├── air.js                         #   Jakość powietrza (GIOŚ + Airly, cache 30 min)
 │   │   ├── air-history.js                 #   24h historia pomiarów (Airly, mock fallback)
 │   │   ├── eco.js                         #   Punkty PSZOK (statyczne)
@@ -181,11 +186,14 @@ smart-myslowice/
 │   │   ├── types/
 │   │   │   └── api.ts                     #   Typy TypeScript: WaterLevel, AirSensor, AedLocation, itd.
 │   │   ├── hooks/
+│   │   │   ├── useAIAssistant.ts          #   Hook do komunikacji z API asystenta (cache, timeout, abort)
 │   │   │   ├── useFetch.ts                #   Generyczny hook fetch (AbortController, 10s timeout)
 │   │   │   └── useTheme.ts                #   Auto-tryb: sunrise/sunset → light / dusk / dark
 │   │   ├── data/
 │   │   │   └── stationCoordinates.ts      #   Mockowane współrzędne stacji hydrologicznych (fallback)
 │   │   ├── components/
+│   │   │   ├── AIAssistant.tsx           #   Asystent AI – zwijany czat w prawym dolnym rogu
+│   │   │   ├── AIAssistant.module.css
 │   │   │   ├── Header.tsx                 #   Nagłówek: zegar, pogoda, przełącznik motywu
 │   │   │   ├── Header.module.css
 │   │   │   ├── Nav.tsx                    #   Nawigacja dolna (zakładki z emoji)
@@ -219,7 +227,10 @@ smart-myslowice/
 │   │       ├── Badge.test.jsx             #   3 testy: treść, domyślny wariant, klasy wariantów
 │   │       ├── AedPage.test.jsx           #   1 test: renderowanie strony AED
 │   │       ├── AirPage.test.jsx           #   1 test: renderowanie strony powietrza
-│   │       └── ErrorBoundary.test.jsx     #   3 testy: granica błędu
+│   │       ├── ErrorBoundary.test.jsx     #   3 testy: granica błędu
+│   │       ├── AIAssistant.test.tsx       #   9 testów: renderowanie, wysyłanie, odpowiedź, błąd, loading
+│   │       └── api/
+│   │           └── ai-assistant.test.js   #   13 testów: walidacja, intencje, API data, rate limiting
 │   ├── dev-api-server.mjs                #   Lokalny serwer API (Express, wczytuje api/*.js)
 │   ├── .husky/
 │   │   └── pre-commit                    #   Hook: lint-staged (ESLint + Prettier)
@@ -292,7 +303,7 @@ npx vitest --ui
 npx vitest
 ```
 
-**Stan testów (19 testów w 6 plikach):**
+**Stan testów (41 testów w 8 plikach):**
 
 | Plik | Testy | Opis |
 |---|---|---|
@@ -302,6 +313,8 @@ npx vitest
 | `ErrorBoundary.test.jsx` | 3 | Łapanie błędów, renderowanie fallbacku, props children |
 | `AedPage.test.jsx` | 1 | Renderowanie strony z listą defibrylatorów |
 | `AirPage.test.jsx` | 1 | Renderowanie strony z danymi o jakości powietrza |
+| `AIAssistant.test.tsx` | 9 | Przycisk, panel, wysyłanie zapytania, odpowiedź, wskaźnik pisania, błąd, dostępność, nawigacja |
+| `api/ai-assistant.test.js` | 13 | Walidacja metody/metoda, pole query, długość znaków, intencje (powitanie, pomoc, powietrze, pogoda, AED, toalety, eko, woda, nieznane), błędy API |
 
 ---
 

@@ -1,0 +1,295 @@
+/* ── Wrapper — kotwica dla pozycjonowania ──────────────────────────────── */
+.wrapper {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.75rem;
+  pointer-events: none;
+}
+
+.wrapper > * {
+  pointer-events: auto;
+}
+
+/* ── Przycisk otwierania/zamykania ─────────────────────────────────────── */
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.2rem;
+  border: none;
+  border-radius: 99px;
+  background: var(--c-indigo);
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.toggle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(99, 102, 241, 0.45);
+}
+
+.toggle:active {
+  transform: translateY(0);
+}
+
+.toggleActive {
+  background: var(--c-red);
+  box-shadow: 0 4px 16px rgba(255, 59, 78, 0.35);
+}
+
+.toggleActive:hover {
+  background: #e03045;
+  box-shadow: 0 6px 24px rgba(255, 59, 78, 0.45);
+}
+
+.toggleIcon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.toggleLabel {
+  line-height: 1;
+}
+
+/* ── Panel czatu ───────────────────────────────────────────────────────── */
+.panel {
+  width: 380px;
+  max-width: calc(100vw - 4rem);
+  max-height: min(600px, calc(100vh - 10rem));
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Nagłówek ──────────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.9rem 1.2rem;
+  background: var(--c-surface2);
+  border-bottom: 1px solid var(--c-border);
+  font-family: 'DM Serif Display', serif;
+  font-size: 1rem;
+  color: var(--c-text);
+}
+
+.headerIcon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.headerTitle {
+  font-weight: 400;
+}
+
+/* ── Lista wiadomości ──────────────────────────────────────────────────── */
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  scroll-behavior: smooth;
+}
+
+.messages::-webkit-scrollbar { width: 4px; }
+.messages::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 99px; }
+
+/* ── Wiadomości ────────────────────────────────────────────────────────── */
+.bubble {
+  max-width: 85%;
+  padding: 0.7rem 1rem;
+  border-radius: 14px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.userBubble {
+  align-self: flex-end;
+  background: var(--c-indigo);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.assistantBubble {
+  align-self: flex-start;
+  background: var(--c-surface2);
+  color: var(--c-text);
+  border-bottom-left-radius: 4px;
+}
+
+.bubbleContent {
+  white-space: pre-wrap;
+}
+
+/* ── Link sugerowany ───────────────────────────────────────────────────── */
+.suggestedLink {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--c-indigo);
+  border-radius: 99px;
+  background: transparent;
+  color: var(--c-indigo);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+
+.suggestedLink:hover {
+  background: var(--c-indigo);
+  color: #fff;
+}
+
+/* ── Wskaźnik pisania ──────────────────────────────────────────────────── */
+.typing {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0;
+}
+
+.typingDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c-muted);
+  animation: typingBounce 1.4s ease-in-out infinite;
+}
+
+.typingDot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typingDot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
+
+/* ── Wiersz inputu ─────────────────────────────────────────────────────── */
+.inputRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1rem;
+  border-top: 1px solid var(--c-border);
+  background: var(--c-surface);
+}
+
+.input {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--c-border);
+  border-radius: 99px;
+  background: var(--c-surface2);
+  color: var(--c-text);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 0.18s;
+}
+
+.input::placeholder {
+  color: var(--c-muted);
+}
+
+.input:focus {
+  border-color: var(--c-indigo);
+}
+
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sendBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 50%;
+  background: var(--c-indigo);
+  color: #fff;
+  cursor: pointer;
+  transition:
+    background 0.18s,
+    transform 0.18s;
+  flex-shrink: 0;
+}
+
+.sendBtn:hover:not(:disabled) {
+  background: #4f46e5;
+  transform: scale(1.05);
+}
+
+.sendBtn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.sendBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Responsywność ─────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .wrapper {
+    bottom: 1rem;
+    right: 1rem;
+  }
+
+  .panel {
+    width: calc(100vw - 2rem);
+    max-height: calc(100vh - 8rem);
+  }
+
+  .toggle {
+    padding: 0.6rem 1rem;
+    font-size: 0.82rem;
+  }
+
+  .toggleLabel {
+    display: none;
+  }
+}

@@ -25,7 +25,10 @@
       "Bash(curl *)",
       "Bash(netstat *)",
       "Bash(echo.)",
-      "Bash(type *)"
+      "Bash(type *)",
+      "Bash(do *)",
+      "Bash(npm test)",
+      "Bash(start *)"
     ]
   },
   "$version": 4

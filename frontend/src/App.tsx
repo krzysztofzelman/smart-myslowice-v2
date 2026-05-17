@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Nav from './components/Nav';
 import ErrorBoundary from './components/ErrorBoundary';
+import AIAssistant from './components/AIAssistant';
 import { useTheme } from './hooks/useTheme';
 import { ThemeContext } from './ThemeContext';
 import type { Theme } from './hooks/useTheme';
@@ -87,6 +88,7 @@ export default function App() {
           <p><strong>Smart Mysłowice</strong> — Projekt edukacyjny</p>
           <p className={styles.footerSub}>Dane przykładowe wymagają weryfikacji z Urzędem Miasta · 2026</p>
         </footer>
+        <AIAssistant />
       </div>
     </ThemeContext.Provider>
   );

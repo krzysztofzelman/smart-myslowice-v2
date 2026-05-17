@@ -88,3 +88,18 @@ export interface TransitStop {
   lng: number;
   code?: string;
 }
+
+/* ───────── AI Assistant types ───────── */
+
+export interface AIAssistantRequest {
+  query: string;
+  currentPage?: string;
+  selectedStationId?: string;
+  userCoordinates?: { lat: number; lng: number };
+}
+
+export interface AIAssistantResponse {
+  answer: string;
+  suggestedPath?: string;
+  data?: Record<string, unknown>;
+}
