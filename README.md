@@ -16,9 +16,10 @@
 ## Zrzuty ekranu
 
 | Mapa stanu wód | Jakość powietrza | Widok na telefonie |
-|---|---|---|
-| ![zrzut mapy wód](screenshot-water.png) | ![zrzut jakości powietrza](screenshot-air.png) | ![zrzut mobilny](screenshot-mobile.png) |
-| *Dodaj własny zrzut ekranu* | *Dodaj własny zrzut ekranu* | *Dodaj własny zrzut ekranu* |
+|:---:|:---:|:---:|
+| *placeholder — dodaj zrzut* | *placeholder — dodaj zrzut* | *placeholder — dodaj zrzut* |
+
+> 📸 Zrzuty ekranu zostaną dodane wkrótce. Aby dodać własne, umieść obrazy w katalogu `screenshots/` i zaktualizuj ścieżki.
 
 ---
 
