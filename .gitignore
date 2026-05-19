@@ -16,6 +16,7 @@ backend/.env
 # Logi
 *.log
 npm-debug.log*
+logs/
 
 # System
 .DS_Store
