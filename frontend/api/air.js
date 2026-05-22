@@ -87,9 +87,10 @@ async function fetchGios() {
       const pm25 = pm25res !== null ? Math.round(pm25res.value) : null;
       const pm10 = pm10res !== null ? Math.round(pm10res.value) : null;
 
+      const aqIdx = index?.['AqIndex']; // AQ index jest zagnieżdżony pod tym kluczem
       const qualityFromIndex =
-        indexValToQuality(index?.['Wartość indeksu dla wskaźnika PM2.5']) ??
-        indexValToQuality(index?.['Wartość indeksu']);
+        indexValToQuality(aqIdx?.['Wartość indeksu dla wskaźnika PM2.5']) ??
+        indexValToQuality(aqIdx?.['Wartość indeksu']);
 
       return {
         id: stationId,
@@ -99,7 +100,7 @@ async function fetchGios() {
         pm25,
         pm10,
         quality: qualityFromIndex ?? pm25ToQuality(pm25),
-        updatedAt: index?.['Data wykonania obliczeń indeksu'] ?? pm25res?.date ?? null,
+        updatedAt: aqIdx?.['Data wykonania obliczeń indeksu'] ?? pm25res?.date ?? null,
         source: 'gios',
       };
     } catch { return null; }
