@@ -1,25 +1,18 @@
-# Smart Mysłowice v2 — Dashboard miejski
+# Smart Mysłowice — Dashboard miejski
 
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
 [![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite)](https://vitejs.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript)](https://www.typescriptlang.org)
+[![Express](https://img.shields.io/badge/Express-5-000?logo=express)](https://expressjs.com)
 [![Leaflet](https://img.shields.io/badge/Leaflet-1.9-199900?logo=leaflet)](https://leafletjs.com)
 [![ESLint](https://img.shields.io/badge/ESLint-10-4B32C3?logo=eslint)](https://eslint.org)
-[![Vercel](https://img.shields.io/badge/Vercel-Deployed-000?logo=vercel)](https://vercel.com)
-[![Testy](https://img.shields.io/badge/Testy-42_passing-22d3a5)](#testy)
+[![PM2](https://img.shields.io/badge/PM2-5-2B037A?logo=pm2)](https://pm2.keymetrics.io)
+[![Testy](https://img.shields.io/badge/Testy-43_passing-22d3a5)](#testy)
 [![Licencja](https://img.shields.io/badge/Licencja-MIT-green)](LICENSE)
 
-**Smart Mysłowice** to nowoczesna, responsywna aplikacja webowa typu dashboard, agregująca dane miejskie dla Mysłowic w czasie rzeczywistym. Łączy informacje z wielu źródeł — GIOŚ, Airly, OpenWeatherMap, IMGW, OpenStreetMap oraz zbiory statyczne — w jednym interfejsie z mapami, wykresami i automatycznym motywem dnia/zmierzchu/nocy.
+**Smart Mysłowice** to nowoczesna, responsywna aplikacja webowa typu dashboard, agregująca dane miejskie dla **Mysłowic** w czasie rzeczywistym. Łączy informacje z otwartych źródeł publicznych — GIOŚ, Airly, OpenWeatherMap, IMGW, OpenStreetMap oraz zbiory statyczne — w jednym, przejrzystym interfejsie z mapami, wykresami i automatycznym motywem dnia/zmierzchu/nocy.
 
----
-
-## Zrzuty ekranu
-
-| Mapa stanu wód | Jakość powietrza | Widok na telefonie |
-|:---:|:---:|:---:|
-| *placeholder — dodaj zrzut* | *placeholder — dodaj zrzut* | *placeholder — dodaj zrzut* |
-
-> 📸 Zrzuty ekranu zostaną dodane wkrótce. Aby dodać własne, umieść obrazy w katalogu `screenshots/` i zaktualizuj ścieżki.
+Aplikacja dostępna jest pod adresem **[smart-myslowice.pl](https://smart-myslowice.pl)**.
 
 ---
 
@@ -36,14 +29,14 @@
 | 🚌 | **Transport** | (W przygotowaniu) Przystanki i pojazdy komunikacji miejskiej na żywo z GTFS-RT | [Transport GZM](https://www.metropoliaztm.pl) |
 | 🤖 | **Asystent AI** | Asystent odpowiadający na pytania w języku naturalnym o dane miejskie. Rozumie pytania o jakość powietrza, AED, pogodę, toalety, PSZOK, stan wód. Działa w trybie rules-based (offline) lub z integracją zewnętrznego modelu LLM (OpenAI, Anthropic, Ollama). Zwijany czat w prawym dolnym rogu, z historią konwersacji i linkami do szczegółów. | Wbudowany silnik reguł + opcjonalnie zewnętrzny LLM |
 
-### Cechy wspólne
+### Cechy przekrojowe
 
 - 🌓 **Automatyczny motyw** — płynne przejścia między motywem jasnym, zmierzchowym i ciemnym, wyznaczane na podstawie rzeczywistych godzin wschodu i zachodu słońca (API OpenWeatherMap). Użytkownik może ręcznie przełączać motyw (cykl: light → dusk → dark).
-- 🗺️ **Mapy Leaflet** — interaktywne mapy CartoDB (dark_all / voyager) dostosowujące się do motywu, z warstwą granic miasta Mysłowice pobieraną z Nominatim (OpenStreetMap).
-- 📱 **PWA** — aplikacja progresywna z service workerem (`stale-while-revalidate`), możliwa do zainstalowania na urządzeniu jako aplikacja. Manifest i ikony w `public/`.
+- 🗺️ **Mapy Leaflet** — interaktywne mapy CartoDB (dark_all / voyager) dostosowujące się do motywu, z warstwą granicy miasta Mysłowice pobieraną z Nominatim (OpenStreetMap).
+- 📱 **Progressive Web App (PWA)** — aplikację można zainstalować na urządzeniu jako aplikację natywną. Service worker w strategii `stale-while-revalidate` zapewnia działanie offline dla odwiedzonych wcześniej zasobów.
 - 📐 **Responsywność** — w pełni responsywny układ: na desktopie mapa + lista obok siebie, na mobile jeden pod drugim.
-- 🧭 **Geolokalizacja** — strony AED i stanu wód umożliwiają znalezienie najbliższego punktu względem aktualnej lokalizacji użytkownika (z wykorzystaniem wzoru haversine).
-- 🗃️ **Fallback współrzędnych** — stacje hydrologiczne bez współrzędnych z API IMGW otrzymują przybliżone współrzędne z lokalnej bazy danych (`stationCoordinates.ts`), co pozwala na wyświetlenie ich na mapie.
+- 🧭 **Geolokalizacja** — strony AED i stanu wód umożliwiają znalezienie najbliższego punktu względem aktualnej lokalizacji użytkownika (wzór haversine).
+- 🗃️ **Fallback współrzędnych** — stacje hydrologiczne bez współrzędnych z API IMGW otrzymują przybliżone współrzędne z lokalnej bazy danych, co pozwala na wyświetlenie ich na mapie.
 
 ---
 
@@ -55,26 +48,27 @@
 | Bundler | [Vite](https://vitejs.dev) | ^6.3.0 |
 | Język | [TypeScript](https://www.typescriptlang.org) | ^6.0.3 |
 | Mapy | [Leaflet](https://leafletjs.com) + [react-leaflet](https://react-leaflet.js.org) | ^1.9.4 / ^5.0.0 |
-| Wykresy (air history) | [Chart.js](https://www.chartjs.org) + [react-chartjs-2](https://react-chartjs-2.js.org) | ^4.5.1 / ^5.3.1 |
+| Wykresy | [Chart.js](https://www.chartjs.org) + [react-chartjs-2](https://react-chartjs-2.js.org) | ^4.5.1 / ^5.3.1 |
 | Routing | [React Router](https://reactrouter.com) | ^7.15.0 |
+| Backend / API | [Express](https://expressjs.com) (Node.js) | ^5.2.1 |
 | Testy | [Vitest](https://vitest.dev) + [React Testing Library](https://testing-library.com) | ^4.1.5 / ^16.3.2 |
 | Linter | [ESLint](https://eslint.org) + [typescript-eslint](https://typescript-eslint.io) (flat config) | ^10.3.0 / ^8.59.2 |
 | Formatter | [Prettier](https://prettier.io) | ^3.8.3 |
 | Git hooks | [Husky](https://typicode.github.io/husky) + [lint-staged](https://github.com/lint-staged/lint-staged) | ^9.1.7 / ^17.0.4 |
-| Monitorowanie błędów | [Sentry](https://sentry.io) (opcjonalnie, wymaga `VITE_SENTRY_DSN`) | ^10.52.0 |
-| Stylowanie | [CSS Modules](https://github.com/css-modules/css-modules) + CSS Custom Properties (motywy) | — |
+| Monitorowanie błędów | [Sentry](https://sentry.io) (opcjonalnie) | ^10.52.0 |
+| Stylowanie | CSS Modules + CSS Custom Properties (motywy) | — |
 | Asystent AI | Rules-based engine (intent matching) + opcjonalny LLM (OpenAI / Anthropic / Ollama) | — |
-| Backend/API | Vercel Serverless Functions (Node.js ESM) + `dev-api-server.mjs` (lokalnie) | — |
-| Geokodowanie | [Nominatim](https://nominatim.openstreetmap.org) (OpenStreetMap) dla granicy miasta | — |
-| Deployment | [Vercel](https://vercel.com) | — |
+| Proces manager | [PM2](https://pm2.keymetrics.io) | — |
+| Serwer produkcyjny | Nginx (reverse proxy) + Express | — |
+| System | Ubuntu 22.04 LTS | — |
+| Geokodowanie | [Nominatim](https://nominatim.openstreetmap.org) (OpenStreetMap) — granica miasta | — |
 
 ---
 
 ## Wymagania wstępne
 
-- **Node.js** 18.x lub nowszy
+- **Node.js** 18.x lub nowszy (zalecane 22.x LTS)
 - **npm** 9.x lub nowszy
-- Konto na **Vercel** (do deploymentu)
 - Klucze API (opcjonalne — aplikacja działa w pełni na danych mockowych)
 
 ---
@@ -83,7 +77,7 @@
 
 ```bash
 # 1. Sklonuj repozytorium
-git clone <repo-url>
+git clone https://github.com/zelmano/smart-myslowice.git
 cd smart-myslowice
 
 # 2. Zainstaluj zależności (katalog frontend/)
@@ -95,10 +89,10 @@ npm run dev:all
 ```
 
 > **`npm run dev:all`** uruchamia jednocześnie:
-> - `npm run dev` — Vite dev server na `http://localhost:5173` (frontend)
-> - `npm run dev:api` — Lokalny serwer API na `http://localhost:3001` (uruchamia wszystkie handlery z `api/` przez Express)
->
-> Vite proxy automatycznie przekierowuje żądania `/api/*` do lokalnego serwera API.
+> - `npm run dev` — serwer deweloperski Vite na `http://localhost:5173` (frontend z HMR)
+> - `npm run dev:api` — lokalny serwer API na `http://localhost:3001` (Express, dynamicznie ładuje handlery z `api/`)
+
+Vite proxy automatycznie przekierowuje żądania `/api/*` do lokalnego serwera API.
 
 Aplikacja będzie dostępna pod adresem **http://localhost:5173**.
 
@@ -110,14 +104,19 @@ npm run dev
 
 # Tylko serwer API
 npm run dev:api
+
+# Produkcyjnie — zbuduj frontend i uruchom serwer
+npm run build
+node server.js
+# → http://localhost:3001
 ```
 
 ### Lokalny serwer API
 
-Plik `dev-api-server.mjs` to lekki serwer Express, który wczytuje wszystkie pliki `.js` z katalogu `api/` i udostępnia je jako endpointy REST. Wspiera:
+Plik `dev-api-server.mjs` to lekki serwer Express, który wczytuje wszystkie pliki `.js` z katalogu `api/` i udostępnia je jako endpointy REST.
 
 - Dynamiczne ładowanie handlerów (każdy plik `.js` w `api/` → `/:nazwapliku` endpoint)
-- Zmienne środowiskowe z pliku `.env.local`
+- Zmienne środowiskowe z pliku `.env`
 - Logowanie czasów odpowiedzi
 
 ---
@@ -128,17 +127,15 @@ Plik `.env` (lub `.env.local`) w katalogu `frontend/`:
 
 | Zmienna | Wymagana | Źródło | Opis |
 |---|---|---|---|
-| `OWM_API_KEY` | ❌ (mock) | [OpenWeatherMap](https://openweathermap.org/api) | Klucz API do pobierania aktualnej pogody. Bez klucza zwracane są dane mockowe. |
-| `AIRLY_API_KEY` | ❌ (mock) | [Airly](https://developer.airly.org) | Klucz API do danych o jakości powietrza. Bez klucza zwracane są dane mockowe. |
-| `VITE_SENTRY_DSN` | ❌ | [Sentry](https://sentry.io) | DSN do monitorowania błędów w produkcji. |
-| `AI_API_KEY` | ❌ (rules-based) | OpenAI / Anthropic / inny | Klucz API do zewnętrznego modelu językowego (LLM). Bez klucza asystent działa w trybie rules-based (offline, bez zewnętrznego API). |
-| `AI_MODEL` | ❌ | OpenAI / Anthropic / Ollama | Nazwa modelu, np. `gpt-3.5-turbo`, `gpt-4`, `claude-3-haiku`. Domyślnie: `gpt-3.5-turbo`. |
-| `AI_API_URL` | ❌ | Dowolny | URL endpointu API (dla OpenAI: `https://api.openai.com/v1/chat/completions`, dla Ollama lokalnie: `http://localhost:11434/v1/chat/completions`). Domyślnie: `https://api.openai.com/v1/chat/completions`. |
+| `OWM_API_KEY` | ❌ (mock) | [OpenWeatherMap](https://openweathermap.org/api) | Klucz API do pobierania aktualnej pogody |
+| `AIRLY_API_KEY` | ❌ (mock) | [Airly](https://developer.airly.org) | Klucz API do danych o jakości powietrza |
+| `VITE_SENTRY_DSN` | ❌ | [Sentry](https://sentry.io) | DSN do monitorowania błędów w produkcji |
+| `AI_API_KEY` | ❌ (rules-based) | OpenAI / Anthropic / inny | Klucz API do zewnętrznego modelu językowego |
+| `AI_MODEL` | ❌ | — | Nazwa modelu, np. `gpt-3.5-turbo`, `gpt-4`, `claude-3-haiku` |
+| `AI_API_URL` | ❌ | — | URL endpointu API (dla OpenAI / Anthropic / Ollama) |
+| `PORT` | ❌ | — | Port serwera Express (domyślnie: 3001) |
 
 > Wszystkie strony działają w pełni bez kluczy API — brakujące dane są zastępowane danymi mockowymi. Jedynie dane IMGW (stan wód) są pobierane z publicznego API bez klucza.
-
-**Deployment (Vercel):** zmienne ustawia się w panelu Vercel:
-_Project Settings → Environment Variables_ (dodaj dla Production, Preview i Development).
 
 ---
 
@@ -150,8 +147,8 @@ _Project Settings → Environment Variables_ (dodaj dla Production, Preview i De
 | [GIOŚ](https://powietrze.gios.gov.pl) | `/api/air` | Jakość powietrza (PM2.5, PM10) | ❌ Publiczne API |
 | [Airly](https://developer.airly.org) | `/api/air`, `/api/air-history` | Jakość powietrza + 24h historia | ✅ `AIRLY_API_KEY` |
 | [OpenWeatherMap](https://openweathermap.org) | `/api/weather` | Aktualna pogoda, wschód/zachód słońca | ✅ `OWM_API_KEY` |
-| [Nominatim](https://nominatim.openstreetmap.org) | *(client-side)* | Granica administracyjna miasta (GeoJSON) — używana w `CityBorder.tsx` | ❌ Publiczne API |
-| [OpenStreetMap](https://www.openstreetmap.org) | *(via CartoDB tiles)* | Podkład map Leaflet (CartoDB dark_all / voyager) | ❌ |
+| [Nominatim](https://nominatim.openstreetmap.org) | *(client-side)* | Granica administracyjna miasta (GeoJSON) | ❌ Publiczne API |
+| [OpenStreetMap](https://www.openstreetmap.org) | *(via CartoDB tiles)* | Podkład map Leaflet | ❌ |
 | Transport GZM | `/api/transit-stops`, `/api/transit-vehicles` | Przystanki GTFS i pojazdy na żywo GTFS-RT | ❌ Publiczne API |
 
 ---
@@ -161,17 +158,17 @@ _Project Settings → Environment Variables_ (dodaj dla Production, Preview i De
 ```
 smart-myslowice/
 ├── frontend/                              # Główna aplikacja (React + Vite + TypeScript)
-│   ├── api/                               # Vercel Serverless Functions (Node.js ESM)
+│   ├── api/                               # Endpointy API (Node.js ESM, Express)
 │   │   ├── aed.js                         #   Statyczne dane AED (14 defibrylatorów)
-│   │   ├── ai-assistant.js                #   Asystent AI (rules-based + opcjonalny LLM, rate limiting)
+│   │   ├── ai-assistant.js                #   Asystent AI (rules-based + opcjonalny LLM)
 │   │   ├── air.js                         #   Jakość powietrza (GIOŚ + Airly, cache 30 min)
-│   │   ├── air-history.js                 #   24h historia pomiarów (Airly, mock fallback)
+│   │   ├── air-history.js                 #   24h historia pomiarów (Airly)
 │   │   ├── eco.js                         #   Punkty PSZOK (statyczne)
 │   │   ├── toilets.js                     #   Toalety publiczne (statyczne)
 │   │   ├── transit-stops.js               #   Przystanki (GTFS, cache 24h)
 │   │   ├── transit-vehicles.js            #   Pojazdy na żywo (GTFS-RT, cache 15s)
 │   │   ├── water-level.js                 #   Stan wód IMGW (cache 15 min, filtr 50 km)
-│   │   └── weather.js                     #   Pogoda OpenWeatherMap (mock fallback)
+│   │   └── weather.js                     #   Pogoda OpenWeatherMap
 │   ├── public/                            #   Pliki statyczne i PWA
 │   │   ├── manifest.json                  #   Manifest aplikacji PWA
 │   │   ├── sw.js                          #   Service Worker (stale-while-revalidate)
@@ -186,106 +183,97 @@ smart-myslowice/
 │   │   ├── constants.ts                   #   Stałe (mapowanie ikon OWM → emoji)
 │   │   ├── vite-env.d.ts                  #   Deklaracje typów (CSS modules, Vite)
 │   │   ├── types/
-│   │   │   └── api.ts                     #   Typy TypeScript: WaterLevel, AirSensor, AedLocation, itd.
+│   │   │   └── api.ts                     #   Typy TypeScript (WaterLevel, AirSensor, itd.)
 │   │   ├── hooks/
-│   │   │   ├── useAIAssistant.ts          #   Hook do komunikacji z API asystenta (cache, timeout, abort)
+│   │   │   ├── useAIAssistant.ts          #   Hook do komunikacji z API asystenta
 │   │   │   ├── useFetch.ts                #   Generyczny hook fetch (AbortController, 10s timeout)
 │   │   │   └── useTheme.ts                #   Auto-tryb: sunrise/sunset → light / dusk / dark
+│   │   ├── utils/
+│   │   │   ├── geo.ts                     #   Funkcje geolokalizacyjne (wzór haversine)
+│   │   │   └── waterStatus.ts             #   Klasyfikacja stanu wód
 │   │   ├── data/
-│   │   │   └── stationCoordinates.ts      #   Mockowane współrzędne stacji hydrologicznych (fallback)
+│   │   │   └── stationCoordinates.ts      #   Współrzędne stacji hydrologicznych (fallback)
 │   │   ├── components/
-│   │   │   ├── AIAssistant.tsx           #   Asystent AI – zwijany czat w prawym dolnym rogu
-│   │   │   ├── AIAssistant.module.css
-│   │   │   ├── Header.tsx                 #   Nagłówek: zegar, pogoda, przełącznik motywu
-│   │   │   ├── Header.module.css
-│   │   │   ├── Nav.tsx                    #   Nawigacja dolna (zakładki z emoji)
-│   │   │   ├── Nav.module.css
-│   │   │   ├── Card.tsx                   #   Uniwersalna karta (akcent, klikalna)
-│   │   │   ├── Card.module.css
-│   │   │   ├── Badge.tsx                  #   Znacznik statusu (green / amber / red / blue / muted)
-│   │   │   ├── Badge.module.css
-│   │   │   ├── CityBorder.tsx             #   Nakładka Leaflet z granicą miasta (Nominatim GeoJSON)
-│   │   │   ├── WaterMap.tsx               #   Mapa Leaflet dla stacji wodnych z markerami i popupami
-│   │   │   ├── AirHistoryModal.tsx        #   Modal z wykresem Chart.js (24h PM2.5/PM10)
-│   │   │   ├── AirHistoryModal.module.css
-│   │   │   └── ErrorBoundary.tsx          #   Granica błędu React z raportowaniem do Sentry
+│   │   │   ├── AIAssistant.tsx / .module.css
+│   │   │   ├── Header.tsx / .module.css
+│   │   │   ├── Nav.tsx / .module.css
+│   │   │   ├── Card.tsx / .module.css
+│   │   │   ├── Badge.tsx / .module.css
+│   │   │   ├── CityBorder.tsx
+│   │   │   ├── WaterMap.tsx
+│   │   │   ├── AirHistoryModal.tsx / .module.css
+│   │   │   └── ErrorBoundary.tsx
 │   │   ├── pages/
-│   │   │   ├── AirPage.tsx                #   Strona jakości powietrza (stacje + wykresy)
-│   │   │   ├── AirPage.module.css
-│   │   │   ├── AedPage.tsx                #   Strona AED (mapa Leaflet + lista + geolokalizacja)
-│   │   │   ├── AedPage.module.css
-│   │   │   ├── WeatherPage.tsx            #   Strona pogody (hero + szczegóły)
-│   │   │   ├── WeatherPage.module.css
-│   │   │   ├── ToiletsPage.tsx            #   Strona toalet publicznych
-│   │   │   ├── ToiletsPage.module.css
-│   │   │   ├── EcoPage.tsx                #   Strona eko-punktów PSZOK
-│   │   │   ├── WaterPage.tsx              #   Strona stanu wód (WaterMap + lista + geolokalizacja)
-│   │   │   ├── WaterPage.module.css
-│   │   │   └── ListPage.module.css        #   Wspólny arkusz dla list (używany przez EcoPage)
-│   │   └── tests/
-│   │       ├── setup.js                   #   Konfiguracja testów (jest-dom, mock fetch)
-│   │       ├── useFetch.test.jsx          #   6 testów: loading, sukces, HTTP error, network error, timeout, cleanup
-│   │       ├── Card.test.jsx              #   5 testów: renderowanie, akcent, className, tytuł, style
-│   │       ├── Badge.test.jsx             #   3 testy: treść, domyślny wariant, klasy wariantów
-│   │       ├── AedPage.test.jsx           #   1 test: renderowanie strony AED
-│   │       ├── AirPage.test.jsx           #   1 test: renderowanie strony powietrza
-│   │       ├── ErrorBoundary.test.jsx     #   3 testy: granica błędu
-│   │       ├── AIAssistant.test.tsx       #   10 testów: renderowanie, wysyłanie, odpowiedź, błąd, dostępność, nawigacja
+│   │   │   ├── AirPage.tsx / .module.css
+│   │   │   ├── AedPage.tsx / .module.css
+│   │   │   ├── WeatherPage.tsx / .module.css
+│   │   │   ├── ToiletsPage.tsx / .module.css
+│   │   │   ├── EcoPage.tsx / .module.css
+│   │   │   ├── WaterPage.tsx / .module.css
+│   │   │   └── ListPage.module.css
+│   │   └── tests/                         #   Testy (Vitest + React Testing Library)
+│   │       ├── setup.js
+│   │       ├── useFetch.test.jsx
+│   │       ├── Card.test.jsx
+│   │       ├── Badge.test.jsx
+│   │       ├── AedPage.test.jsx
+│   │       ├── AirPage.test.jsx
+│   │       ├── ErrorBoundary.test.jsx
+│   │       ├── AIAssistant.test.tsx
 │   │       └── api/
-│   │           └── ai-assistant.test.js   #   14 testów: walidacja, intencje, API data, rate limiting
-│   ├── .env.example                      #   Przykład zmiennych środowiskowych (API keys, AI)
-│   ├── dev-api-server.mjs                #   Lokalny serwer API (Express, wczytuje api/*.js)
-│   ├── .husky/
-│   │   └── pre-commit                    #   Hook: lint-staged (ESLint + Prettier)
-│   ├── .prettierrc                       #   singleQuote, semi:false, trailingComma:all
-│   ├── eslint.config.js                  #   Flat config ESLint v10 (typescript-eslint)
-│   ├── tsconfig.json                     #   Strict mode, ESNext, react-jsx
-│   ├── vite.config.js                    #   @vitejs/plugin-react, proxy /api → :3001
-│   ├── vitest.config.js                  #   Vitest + jsdom + setupFiles
-│   ├── vercel.json                       #   SPA rewrites, API maxDuration: 30
-│   └── package.json                      #   Zależności i skrypty
-├── package.json                          #   Skrypty proxy na poziomie repozytorium
+│   │           └── ai-assistant.test.js
+│   ├── server.js                          #   Serwer produkcyjny Express
+│   ├── dev-api-server.mjs                 #   Lokalny serwer API (developerski)
+│   ├── ecosystem.config.cjs               #   Konfiguracja PM2
+│   ├── DEPLOY.md                          #   Instrukcja deploymentu na VPS
+│   ├── .env.example                       #   Szablon zmiennych środowiskowych
+│   ├── .prettierrc
+│   ├── eslint.config.js                   #   Flat config ESLint v10
+│   ├── tsconfig.json                      #   Strict mode, ESNext, react-jsx
+│   ├── vite.config.js
+│   ├── vitest.config.js
+│   └── package.json
+├── package.json                           #   Skrypty proxy na poziomie repozytorium
 ├── .gitignore
-├── .qwen/                                #   Konfiguracja Qwen Code (asystent AI)
-│   ├── settings.json
-│   └── settings.json.orig
-├── LICENSE                               #   Plik licencji MIT
-└── README.md                             #   Ten plik
+├── LICENSE
+└── README.md                              #   Ten plik
 ```
 
 ---
 
-## Deployment (Vercel)
+## Deployment (VPS — Ubuntu 22.04)
 
-Projekt jest gotowy do deploymentu na Vercel — zawiera `vercel.json` z przekierowaniami SPA i konfiguracją serverless functions.
+Aplikacja działa w środowisku produkcyjnym na serwerze VPS z Ubuntu 22.04, z użyciem **PM2** (process manager) i **Nginx** (reverse proxy).
 
 ```bash
-# 1. Zainstaluj Vercel CLI
-npm i -g vercel
+# 1. Zainstaluj zależności i zbuduj frontend
+cd /var/www/smart-myslowice/frontend
+npm install
+npm run build
 
-# 2. Zaloguj się
-vercel login
+# 2. Skonfiguruj zmienne środowiskowe
+cp .env.example .env
+nano .env
 
-# 3. Ustaw zmienne środowiskowe w Vercel
-vercel env add OWM_API_KEY
-vercel env add AIRLY_API_KEY
-
-# 4. Deploy z katalogu frontend/
-cd frontend
-vercel --prod
+# 3. Uruchom przez PM2
+pm2 start ecosystem.config.cjs
+pm2 save
 ```
 
-**Konfiguracja w panelu Vercel:**
-1. Podłącz repozytorium GitHub
-2. Ustaw **Root Directory** → `frontend`
-3. Dodaj zmienne środowiskowe: `OWM_API_KEY`, `AIRLY_API_KEY`
-4. Framework preset → **Vite**
-5. Build command → `npm run build`
-6. Output directory → `dist`
+Serwer Express (`server.js`) serwuje zarówno zbudowany frontend (katalog `dist/`), jak i wszystkie endpointy API (`/api/*`). Nginx pełni rolę reverse proxy, przekierowując ruch z portów 80/443 na wewnętrzny port aplikacji (domyślnie 3001).
 
-Plik `vercel.json` zapewnia:
-- Przekierowanie wszystkich ścieżek SPA do `index.html` (dla React Router)
-- Maksymalny czas wykonania funkcji API: 30 sekund
+Szczegółowa instrukcja deploymentu znajduje się w pliku **[frontend/DEPLOY.md](frontend/DEPLOY.md)**.
+
+| Element | Szczegóły |
+|---|---|
+| System operacyjny | Ubuntu 22.04 LTS |
+| Proces manager | PM2 (fork mode, 1 instancja) |
+| Reverse proxy | Nginx |
+| Serwer aplikacji | Express (port 3001) |
+| Domena | [smart-myslowice.pl](https://smart-myslowice.pl) |
+| Autostart | `pm2 startup` (systemd) |
+| Logi | `pm2 logs smart-myslowice` |
+| Restart przy błędzie | Auto-restart (max 512 MB pamięci) |
 
 ---
 
@@ -297,7 +285,7 @@ Projekt używa **Vitest** z **React Testing Library** i **jsdom**.
 cd frontend
 
 # Uruchom wszystkie testy (CI mode)
-npm run test
+npm test
 
 # Uruchom z UI (przeglądarka)
 npx vitest --ui
@@ -306,71 +294,66 @@ npx vitest --ui
 npx vitest
 ```
 
-**Wynik testów (43 testy, 42 ✅ / 1 ❌ w 8 plikach):**
+**Stan testów (43 testy w 9 plikach):**
 
-| Plik | Testy | Opis |
+| Plik | Testy | Zakres |
 |---|---|---|
-| `useFetch.test.jsx` | 6 | Stan ładowania, dane, błąd HTTP, błąd sieci, timeout _(znany błąd:złe dopasowanie komunikatu)_, cleanup po unmount |
-| `Card.test.jsx` | 5 | Renderowanie dzieci, kolor akcentu, className, tytuł, style inline |
-| `Badge.test.jsx` | 3 | Renderowanie treści, domyślny wariant, klasa dla wariantu |
-| `ErrorBoundary.test.jsx` | 3 | Łapanie błędów, renderowanie fallbacku, props children |
-| `AedPage.test.jsx` | 1 | Renderowanie strony z listą defibrylatorów |
-| `AirPage.test.jsx` | 1 | Renderowanie strony z danymi o jakości powietrza |
-| `AIAssistant.test.tsx` | 10 | Przycisk, panel, wysyłanie zapytania, odpowiedź, wskaźnik pisania, błąd, dostępność, nawigacja |
-| `api/ai-assistant.test.js` | 14 | Walidacja metody/pola/długości, intencje (powitanie, pomoc, powietrze, pogoda, AED z/bez koordynatów, toalety, eko, woda, nieznane), błędy API |
+| `useFetch.test.jsx` | 6 | Hook fetch: ładowanie, dane, błędy HTTP/sieci, timeout, cleanup |
+| `Card.test.jsx` | 5 | Komponent Card: renderowanie, akcent, klasy, style |
+| `Badge.test.jsx` | 3 | Komponent Badge: treść, warianty, klasy CSS |
+| `ErrorBoundary.test.jsx` | 3 | Granica błędu: łapanie, fallback, props |
+| `AedPage.test.jsx` | 1 | Renderowanie strony AED z listą defibrylatorów |
+| `AirPage.test.jsx` | 1 | Renderowanie strony jakości powietrza |
+| `AIAssistant.test.tsx` | 10 | Asystent: interfejs, wysyłanie, odpowiedzi, błędy, dostępność |
+| `api/ai-assistant.test.js` | 14 | API asystenta: walidacja, intencje, dane, rate limiting |
 
 ---
 
-## Skrypty npm
+## Skrypty npm (katalog `frontend/`)
 
 | Komenda | Opis |
 |---|---|
-| `npm run dev` | Uruchom tylko serwer deweloperski Vite (port 5173) |
-| `npm run dev:api` | Uruchom tylko lokalny serwer API (port 3001) |
-| `npm run dev:all` | Uruchom jednocześnie Vite + API (przez `concurrently`) |
+| `npm run dev` | Serwer deweloperski Vite (port 5173) |
+| `npm run dev:api` | Lokalny serwer API (port 3001) |
+| `npm run dev:all` | Vite + API jednocześnie (przez `concurrently`) |
 | `npm run build` | Zbuduj aplikację do `dist/` |
+| `npm run start` | Uruchom serwer produkcyjny (Express, wymaga `dist/`) |
 | `npm run preview` | Podgląd zbudowanej aplikacji (Vite preview) |
-| `npm run lint` | Sprawdź kod ESLint (z automatyczną naprawą) |
-| `npm run format` | Formatuj kod Prettier |
-| `npm run test` | Uruchom testy Vitest (CI mode) |
-| `npm run prepare` | Zainstaluj hooki Husky (automatycznie po `npm install`) |
+| `npm run lint` | ESLint z automatyczną naprawą |
+| `npm run format` | Prettier — formatowanie kodu |
+| `npm test` | Uruchom testy Vitest (CI mode) |
+| `npm run prepare` | Instalacja hooków Husky (automatycznie po `npm install`) |
 
 ---
 
 ## Wkład w projekt
 
-Chcesz pomóc rozwijać Smart Mysłowice? Świetnie! Oto kilka obszarów, w których możesz się zaangażować:
+Chcesz pomóc rozwijać Smart Mysłowice? Świetnie!
 
 ### 🤖 Asystent AI
-- **Integracja z zewnętrznym LLM** — odblokuj pełny potencjał asystenta przez ustawienie `AI_API_KEY`. Obecnie kod zawiera gotową integrację z OpenAI, Anthropic i Ollama (wystarczy zmienić `if (false && process.env.AI_API_KEY)` na `if (process.env.AI_API_KEY)` w `api/ai-assistant.js`).
-- **Odpowiedzi głosowe** — dodanie syntezy mowy (Web Speech API) do odczytywania odpowiedzi asystenta.
-- **Nowe intencje** — rozszerzenie rules-based engine o zapytania dotyczące transportu miejskiego, zabytków i wydarzeń w Mysłowicach.
-- **Zapamiętywanie konwersacji** — dodanie kontekstu sesji (krótkotrwała pamięć ostatnich pytań) dla bardziej naturalnych rozmów.
+- **Integracja z LLM** — odblokuj pełny potencjał asystenta przez ustawienie `AI_API_KEY` w `.env`.
+- **Odpowiedzi głosowe** — synteza mowy (Web Speech API) dla odpowiedzi asystenta.
+- **Nowe intencje** — rozszerzenie silnika rules-based o zapytania o transport, zabytki, wydarzenia.
 
 ### 🐛 Zgłaszanie błędów
-- Otwórz issue w repozytorium GitHub
-- Opisz krok po kroku, jak odtworzyć problem
-- Dołącz zrzut ekranu i konsolę błędów (jeśli dotyczy)
+Otwórz issue na GitHubie z opisem kroków do reprodukcji, zrzutem ekranu i konsolą błędów.
 
 ### 💡 Propozycje funkcji
-- Nowe źródło danych (np. jakość wody w Brynicy, parkometry, monitoring zieleni)?
-- Nowy widok danych (np. archiwalne wykresy stanu wód)?
-- Integracja z innym API (np. PKP, ZTM, Urząd Miasta)?
+Nowe źródło danych (jakość wody w Brynicy, parkometry, monitoring zieleni)? Nowy widok (archiwalne wykresy)? Integracja z PKP, ZTM, Urzędem Miasta?
 
 ### 🧪 Testy
-- Dodaj testy dla istniejących stron (WeatherPage, ToiletsPage, EcoPage, WaterPage)
-- Dodaj testy jednostkowe dla komponentów (WaterMap, CityBorder, Header, Nav)
-- Dodaj testy integracyjne (przełączanie motywu, nawigacja między stronami)
+- Testy dla WeatherPage, ToiletsPage, EcoPage, WaterPage
+- Testy komponentów: WaterMap, CityBorder, Header, Nav
+- Testy integracyjne: przełączanie motywu, nawigacja
 
 ### 🎨 UI/UX
-- Udoskonalenia dostępności (a11y): kontrast, focus outline, aria-label, rola
-- Responsywność na małych ekranach (testy na urządzeniach mobilnych)
-- Dodanie animacji przejść między stronami (React Router + CSS transitions)
+- Udoskonalenia dostępności (a11y): kontrast, focus outline, aria-label
+- Animacje przejść między stronami (React Router + CSS transitions)
 
 ### 🔧 Kod
-- **TypeScript faza 2** — konwersja pozostałych stron i komponentów (Header, Nav) na TypeScript
-- **React Router** — pełna integracja ścieżek zamiast state machine w App.tsx
-- **Optymalizacja bundle** — code splitting dla map Leaflet (tree-shaking)
+- **TypeScript faza 2** — konwersja pozostałych stron i komponentów na TypeScript
+- **Optymalizacja bundle** — code splitting dla map Leaflet
+- **PWA** — rozszerzenie cache'owania offline
 
 ### Jak zacząć?
 
@@ -386,7 +369,7 @@ npm run dev:all
 git checkout -b feature/twoja-funkcja
 
 # 4. Wprowadź zmiany, dodaj testy, uruchom:
-npm run lint && npm run test && npx tsc --noEmit
+npm run lint && npm test && npx tsc --noEmit
 
 # 5. Wyślij Pull Request
 git push origin feature/twoja-funkcja
@@ -396,31 +379,7 @@ git push origin feature/twoja-funkcja
 
 ## Licencja
 
-MIT
-
-```
-MIT License
-
-Copyright (c) 2026 Smart Mysłowice
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
+MIT &mdash; zobacz plik [LICENSE](LICENSE).
 
 ### Dane zewnętrzne
 
@@ -436,12 +395,8 @@ Dane prezentowane w aplikacji pochodzą od zewnętrznych dostawców i podlegają
 
 ---
 
-## Autorzy
+## O projekcie
 
-Projekt edukacyjny — Smart Mysłowice v2. Dashboard miejski agregujący otwarte dane publiczne dla miasta Mysłowice.
+Projekt edukacyjny — Smart Mysłowice to dashboard miejski agregujący otwarte dane publiczne dla miasta **Mysłowice**. Aplikacja łączy w sobie informacje o jakości powietrza, stanie wód, pogodzie, defibrylatorach AED, toaletach publicznych i punktach selektywnej zbiórki odpadów, udostępniając je w przejrzystym, nowoczesnym interfejsie dostępnym na każdej klasie urządzeń.
 
-Ikona aplikacji: 💧 (emoji water droplet).
-
----
-
-_Projekt edukacyjny — Smart Mysłowice v2 | Dashboard miejski dla Mysłowic_
+**smart-myslowice.pl** &mdash; Twoje miasto w zasięgu kliknięcia.
