@@ -1,8 +1,9 @@
 const GIOS = 'https://api.gios.gov.pl/pjp-api/v1/rest';
-const MYSLOWICE = { lat: 50.235, lng: 19.14 };
+const MYSLOWICE = { lat: 50.2395, lon: 19.1366 };
 const AIRLY_BASE = 'https://airapi.airly.eu/v2';
-const AIRLY_CENTER = { lat: 50.2271, lng: 19.1658 };
+const AIRLY_CENTER = { lat: 50.2395, lon: 19.1366 };
 const AIR_TTL = 30 * 60 * 1000;
+const FETCH_TIMEOUT = 30000; // 30s — niektóre VPS-y mają wolne łącze do API
 
 let airCache = null, airCacheTs = 0;
 let airlyCache = null, airlyCacheTs = 0;
@@ -31,9 +32,15 @@ function pm25ToQuality(v) {
 }
 
 async function giosFetch(path) {
-  const r = await fetch(`${GIOS}${path}`, { signal: AbortSignal.timeout(8000) });
-  if (!r.ok) throw new Error(`GIOŚ ${path} → ${r.status}`);
-  return r.json();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+  try {
+    const r = await fetch(`${GIOS}${path}`, { signal: controller.signal });
+    if (!r.ok) throw new Error(`GIOŚ ${path} → ${r.status}`);
+    return r.json();
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 async function latestValue(sensorId) {
@@ -47,14 +54,18 @@ async function latestValue(sensorId) {
 async function fetchGios() {
   if (airCache && Date.now() - airCacheTs < AIR_TTL) return airCache;
 
+  console.log('[air] Pobieranie danych z GIOŚ…');
   const all = await giosFetch('/station/findAll?size=500&page=0');
   const stations = all['Lista stacji pomiarowych'] ?? [];
+  console.log(`[air] GIOŚ: znaleziono ${stations.length} stacji`);
 
   const nearby = stations
-    .map(s => ({ ...s, dist: distKm(MYSLOWICE.lat, MYSLOWICE.lng, parseFloat(s['WGS84 φ N']), parseFloat(s['WGS84 λ E'])) }))
+    .map(s => ({ ...s, dist: distKm(MYSLOWICE.lat, MYSLOWICE.lon, parseFloat(s['WGS84 φ N']), parseFloat(s['WGS84 λ E'])) }))
     .filter(s => s.dist <= 20)
     .sort((a, b) => a.dist - b.dist)
     .slice(0, 8);
+
+  console.log(`[air] GIOŚ: ${nearby.length} stacji w promieniu 20 km`);
 
   const results = await Promise.all(nearby.map(async (station) => {
     const stationId = station['Identyfikator stacji'];
@@ -96,6 +107,7 @@ async function fetchGios() {
 
   airCache = results.filter(Boolean);
   airCacheTs = Date.now();
+  console.log(`[air] GIOŚ: zwrócono ${airCache.length} stacji z danymi`);
   return airCache;
 }
 
@@ -108,20 +120,48 @@ const AIRLY_LEVEL = {
 async function airlyFetch(path) {
   const key = process.env.AIRLY_API_KEY;
   if (!key) throw new Error('Brak AIRLY_API_KEY');
-  const r = await fetch(`${AIRLY_BASE}${path}`, {
-    headers: { apikey: key, 'Accept-Language': 'pl' },
-    signal: AbortSignal.timeout(8000),
-  });
-  if (!r.ok) throw new Error(`Airly ${path} → ${r.status}`);
-  return r.json();
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+  try {
+    console.log(`[air] Airly fetch: ${AIRLY_BASE}${path}`);
+    const r = await fetch(`${AIRLY_BASE}${path}`, {
+      headers: { apikey: key, 'Accept-Language': 'pl' },
+      signal: controller.signal,
+    });
+    console.log(`[air] Airly odpowiedź: HTTP ${r.status}`);
+    if (!r.ok) throw new Error(`Airly ${path} → ${r.status}`);
+    return r.json();
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 async function fetchAirly() {
   if (airlyCache && Date.now() - airlyCacheTs < AIR_TTL) return airlyCache;
 
-  const installations = await airlyFetch(
-    `/installations/nearest?lat=${AIRLY_CENTER.lat}&lng=${AIRLY_CENTER.lng}&maxDistanceKM=5&maxResults=10`
-  );
+  console.log('[air] Pobieranie danych z Airly…');
+
+  let installations;
+  try {
+    installations = await airlyFetch(
+      `/installations/nearest?lat=${AIRLY_CENTER.lat}&lng=${AIRLY_CENTER.lon}&maxDistanceKM=5&maxResults=10`
+    );
+  } catch (err) {
+    console.error(`[air] Airly błąd (instalacje): ${err.message}`);
+    airlyCache = [];
+    airlyCacheTs = Date.now();
+    return [];
+  }
+
+  if (!Array.isArray(installations) || installations.length === 0) {
+    console.warn('[air] Airly: brak instalacji w promieniu 5 km');
+    airlyCache = [];
+    airlyCacheTs = Date.now();
+    return [];
+  }
+
+  console.log(`[air] Airly: znaleziono ${installations.length} instalacji`);
 
   const results = await Promise.all(installations.map(async (inst) => {
     try {
@@ -134,22 +174,28 @@ async function fetchAirly() {
         return v != null ? Math.round(v) : null;
       };
 
+      console.log(`[air] Airly instalacja ${inst.id}: PM25=${get('PM25')} PM10=${get('PM10')}`);
+
       return {
         id: `airly-${inst.id}`,
-        name: [inst.address.displayAddress1, inst.address.displayAddress2].filter(Boolean).join(', '),
-        address: [inst.address.street, inst.address.number].filter(Boolean).join(' '),
-        city: inst.address.city ?? '',
+        name: [inst.address?.displayAddress1, inst.address?.displayAddress2].filter(Boolean).join(', '),
+        address: [inst.address?.street, inst.address?.number].filter(Boolean).join(' '),
+        city: inst.address?.city ?? '',
         pm25: get('PM25'),
         pm10: get('PM10'),
         quality: AIRLY_LEVEL[index?.level] ?? pm25ToQuality(get('PM25')),
         updatedAt: m.current?.tillDateTime?.replace('T', ' ').slice(0, 16) ?? null,
         source: 'airly',
       };
-    } catch { return null; }
+    } catch (err) {
+      console.warn(`[air] Airly błąd pomiarów dla instalacji ${inst.id}: ${err.message}`);
+      return null;
+    }
   }));
 
   airlyCache = results.filter(Boolean);
   airlyCacheTs = Date.now();
+  console.log(`[air] Airly: zwrócono ${airlyCache.length} stacji z danymi`);
   return airlyCache;
 }
 
@@ -180,15 +226,25 @@ const MOCK_SENSORS = () => [
 ];
 
 export default async function handler(req, res) {
-  const [gios, airly] = await Promise.allSettled([fetchGios(), fetchAirly()]);
+  console.log('[air] === Nowe żądanie /api/air ===');
+  console.log(`[air] AIRLY_API_KEY: ${process.env.AIRLY_API_KEY ? 'USTAWIONY (' + process.env.AIRLY_API_KEY.substring(0, 6) + '...)' : 'BRAK'}`);
 
-  if (gios.status === 'rejected') console.error(`[air] GIOŚ: ${gios.reason?.message}`);
-  if (airly.status === 'rejected') console.error(`[air] Airly: ${airly.reason?.message}`);
+  const start = Date.now();
+  const [gios, airly] = await Promise.allSettled([fetchGios(), fetchAirly()]);
+  const elapsed = Date.now() - start;
+
+  if (gios.status === 'rejected') console.error(`[air] ✗ GIOŚ: ${gios.reason?.message}`);
+  else console.log(`[air] ✓ GIOŚ OK (${gios.value?.length ?? 0} stacji)`);
+
+  if (airly.status === 'rejected') console.error(`[air] ✗ Airly: ${airly.reason?.message}`);
+  else console.log(`[air] ✓ Airly OK (${airly.value?.length ?? 0} stacji)`);
 
   const data = [
     ...(gios.status === 'fulfilled' ? gios.value : []),
     ...(airly.status === 'fulfilled' ? airly.value : []),
   ];
+
+  console.log(`[air] Łącznie: ${data.length} stacji (czas: ${elapsed}ms)`);
 
   if (data.length === 0) {
     console.warn('[air] Oba źródła niedostępne – zwracam dane mockowe');

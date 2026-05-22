@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://smart-myslowice.pl/sitemap.xml
