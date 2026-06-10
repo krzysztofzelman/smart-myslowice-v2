@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import type { AirHistoryPoint } from '../types/api';
+import { useLanguage } from '../i18n/LanguageContext';
 import styles from './AirHistoryModal.module.css';
 
 interface AirHistoryModalProps {
@@ -55,6 +56,7 @@ const CHART_OPTIONS = {
 };
 
 export default function AirHistoryModal({ station, onClose }: AirHistoryModalProps) {
+  const { t } = useLanguage();
   const [history, setHistory] = useState<AirHistoryPoint[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -119,16 +121,16 @@ export default function AirHistoryModal({ station, onClose }: AirHistoryModalPro
         <div className={styles.header}>
           <div>
             <h3 className={styles.title}>{station.name}</h3>
-            <p className={styles.sub}>PM2.5 i PM10 — ostatnie 24h</p>
+            <p className={styles.sub}>{t.airHistoryModal.title}</p>
           </div>
-          <button className={styles.closeBtn} onClick={onClose} aria-label="Zamknij">✕</button>
+          <button className={styles.closeBtn} onClick={onClose} aria-label={t.airHistoryModal.close}>✕</button>
         </div>
 
         <div className={styles.chartWrap}>
-          {!history && !error && <p className={styles.info}>Ładowanie…</p>}
-          {error && <p className={styles.errMsg}>Błąd: {error}</p>}
+          {!history && !error && <p className={styles.info}>{t.airHistoryModal.loading}</p>}
+          {error && <p className={styles.errMsg}>{t.airHistoryModal.error} {error}</p>}
           {history && history.length === 0 && (
-            <p className={styles.info}>Brak danych historycznych</p>
+            <p className={styles.info}>{t.airHistoryModal.noData}</p>
           )}
           {history && history.length > 0 && chartData && (
             <div style={{ width: '100%', height: 260 }}>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { WaterLevel } from '../types/api';
 import { useFetch } from '../hooks/useFetch';
+import { useLanguage } from '../i18n/LanguageContext';
 import { haversineKm } from '../utils/geo';
 import { getWaterStatus, getRiskColor, WATER_STATUS } from '../utils/waterStatus';
 import WaterMap from '../components/WaterMap';
@@ -10,6 +11,7 @@ import styles from './WaterPage.module.css';
 
 export default function WaterPage() {
   const { data: stations, loading, error } = useFetch<WaterLevel[]>('/api/water-level');
+  const { t } = useLanguage();
   const [flyTo, setFlyTo] = useState<[number, number] | null>(null);
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
@@ -65,8 +67,8 @@ export default function WaterPage() {
   return (
     <div className={styles.page}>
       <header className={styles.pageHead}>
-        <h2 className={styles.pageTitle}>🌊 Stan Rzek</h2>
-        <p className={styles.pageSub}>Poziomy wód — IMGW</p>
+        <h2 className={styles.pageTitle}>🌊 {t.waterPage.title}</h2>
+        <p className={styles.pageSub}>{t.waterPage.subtitle}</p>
       </header>
 
       <div className={styles.statsRow}>
@@ -79,7 +81,7 @@ export default function WaterPage() {
           ) : (
             <>
               <p className={styles.statNum}>{safeCount}</p>
-              <p className={styles.statLbl}>Bezpieczne</p>
+              <p className={styles.statLbl}>{t.waterStatus.safe}</p>
             </>
           )}
         </Card>
@@ -92,7 +94,7 @@ export default function WaterPage() {
           ) : (
             <>
               <p className={styles.statNum}>{warningCount}</p>
-              <p className={styles.statLbl}>Ostrzeżenie</p>
+              <p className={styles.statLbl}>{t.waterStatus.warning}</p>
             </>
           )}
         </Card>
@@ -105,7 +107,7 @@ export default function WaterPage() {
           ) : (
             <>
               <p className={styles.statNum}>{dangerCount}</p>
-              <p className={styles.statLbl}>Alarm</p>
+              <p className={styles.statLbl}>{t.waterStatus.danger}</p>
             </>
           )}
         </Card>
@@ -116,11 +118,11 @@ export default function WaterPage() {
         onClick={handleFindNearest}
         disabled={geoLoading || loading}
       >
-        {geoLoading ? '⏳ Szukanie…' : '📍 Znajdź najbliższą stację'}
+        {geoLoading ? t.waterPage.geoBtnLoading : `📍 ${t.waterPage.geoBtnText}`}
       </button>
 
       {geoError && <div className={styles.geoError}>⚠️ {geoError}</div>}
-      {error   && <p style={{ color: 'var(--c-red)' }}>Błąd: {error}</p>}
+      {error   && <p style={{ color: 'var(--c-red)' }}>{t.common.error} {error}</p>}
 
       {loading ? (
         <div className={`skeleton`} style={{ height: '480px', borderRadius: 'var(--radius)' }} />
@@ -129,14 +131,14 @@ export default function WaterPage() {
           <div className={styles.mapCol}>
             {stations && stations.length > 0 && (
               <div className={styles.mapWrap}>
-                <WaterMap stations={stations} flyTo={flyTo} onFlyDone={() => setFlyTo(null)} />
+                <WaterMap stations={stations} flyTo={flyTo} />
               </div>
             )}
           </div>
 
           <div className={styles.listCol}>
             <div className={styles.listWrap}>
-        <h2 className={styles.listTitle}>Wszystkie stacje ({sortedStations?.length ?? 0})</h2>
+        <h2 className={styles.listTitle}>{t.waterPage.listTitle} ({sortedStations?.length ?? 0})</h2>
         <div className={styles.list}>
           {sortedStations?.slice(0, PREVIEW).map(station => {
             const st = getWaterStatus(station.level, station.warningLevel, station.alarmLevel);
@@ -163,7 +165,7 @@ export default function WaterPage() {
                   <span className={styles.levelVal} style={{ color: riskColor }}>
                     {station.level !== null ? `${station.level} cm` : '--'}
                   </span>
-                  <Badge variant={q.variant}>{q.label}</Badge>
+                  <Badge variant={q.variant}>{t.waterStatus[st as keyof typeof t.waterStatus]}</Badge>
                 </div>
               </button>
             );
@@ -201,7 +203,7 @@ export default function WaterPage() {
                         <span className={styles.levelVal} style={{ color: riskColor }}>
                           {station.level !== null ? `${station.level} cm` : '--'}
                         </span>
-                        <Badge variant={q.variant}>{q.label}</Badge>
+                        <Badge variant={q.variant}>{t.waterStatus[st as keyof typeof t.waterStatus]}</Badge>
                       </div>
                     </button>
                   );
@@ -209,7 +211,7 @@ export default function WaterPage() {
               </div>
             </div>
             <button className={styles.toggleBtn} onClick={() => setExpanded(e => !e)}>
-              {expanded ? '▲ Zwiń' : `▼ Pokaż wszystkie (${sortedStations.length})`}
+              {expanded ? t.waterPage.collapse : `▼ ${t.waterPage.showAll} (${sortedStations.length})`}
             </button>
           </>
         )}
@@ -220,7 +222,7 @@ export default function WaterPage() {
 
       <Card>
         <p style={{ color: 'var(--c-muted)', fontSize: '0.88rem' }}>
-          <strong style={{ color: 'var(--c-text)' }}>Źródło:</strong> IMGW-PIB · Stacje hydrologiczne w okolicy Mysłowic. Odświeżane co 60 minut.
+          <strong style={{ color: 'var(--c-text)' }}>{t.common.source}</strong> {t.waterPage.source} · {t.waterPage.sourceRefresh}
         </p>
       </Card>
     </div>

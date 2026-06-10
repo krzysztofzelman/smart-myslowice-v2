@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import type { WaterLevel } from '../types/api';
 import { useThemeContext } from '../ThemeContext';
+import { useLanguage } from '../i18n/LanguageContext';
 import { getStationCoordinates } from '../data/stationCoordinates';
 import { getWaterStatus, WATER_STATUS } from '../utils/waterStatus';
 import CityBorder from './CityBorder';
@@ -22,11 +23,11 @@ function FlyTo({ coords }: { coords: [number, number] | null }) {
 interface WaterMapProps {
   stations: WaterLevel[];
   flyTo?: [number, number] | null;
-  onFlyDone?: () => void;
 }
 
-export default function WaterMap({ stations, flyTo, onFlyDone }: WaterMapProps) {
+export default function WaterMap({ stations, flyTo }: WaterMapProps) {
   const { theme } = useThemeContext();
+  const { t } = useLanguage();
 
   const tileUrl = theme === 'dark'
     ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
@@ -90,25 +91,25 @@ export default function WaterMap({ stations, flyTo, onFlyDone }: WaterMapProps) 
                     {station.name}
                     {!station.coordinates && (
                       <span style={{ fontSize: '0.75rem', color: '#888', marginLeft: 6 }}>
-                        (przybliżona lokalizacja)
+                        {t.waterMap.approxLocation}
                       </span>
                     )}
                   </strong>
                   <p style={{ marginBottom: 2, fontSize: '0.85rem' }}>🏞️ {station.river}</p>
                   <p style={{ marginBottom: 2, fontSize: '0.85rem' }}>
-                    Poziom: {station.level !== null ? `${station.level} cm` : '--'}
+                    {t.waterMap.level} {station.level !== null ? `${station.level} cm` : '--'}
                   </p>
                   {station.warningLevel !== null && (
                     <p style={{ marginBottom: 2, fontSize: '0.85rem', color: '#f59e0b' }}>
-                      Ostrzegawczy: {station.warningLevel} cm
+                      {t.waterMap.warning} {station.warningLevel} cm
                     </p>
                   )}
                   {station.alarmLevel !== null && (
                     <p style={{ marginBottom: 2, fontSize: '0.85rem', color: '#ff3b4e' }}>
-                      Alarmowy: {station.alarmLevel} cm
+                      {t.waterMap.alarm} {station.alarmLevel} cm
                     </p>
                   )}
-                  <Badge variant={WATER_STATUS[st].variant}>{WATER_STATUS[st].label}</Badge>
+                  <Badge variant={WATER_STATUS[st].variant}>{t.waterStatus[st as keyof typeof t.waterStatus]}</Badge>
                 </div>
               </Popup>
             </CircleMarker>

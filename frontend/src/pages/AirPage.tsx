@@ -2,16 +2,24 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { AirSensor } from '../types/api';
 import { useFetch } from '../hooks/useFetch';
+import { useLanguage } from '../i18n/LanguageContext';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
 import AirHistoryModal from '../components/AirHistoryModal';
 import styles from './AirPage.module.css';
 
-const QUALITY: Record<string, { label: string; variant: 'green' | 'amber' | 'red' | 'muted'; color: string }> = {
-  good:    { label: 'Dobra',      variant: 'green', color: '#22d3a5' },
-  moderate:{ label: 'Średnia',    variant: 'amber', color: '#f59e0b' },
-  poor:    { label: 'Zła',        variant: 'red',   color: '#ff3b4e' },
-  unknown: { label: 'Brak danych',variant: 'muted', color: 'rgba(255,255,255,0.25)' },
+const QUALITY_BASE: Record<string, { variant: 'green' | 'amber' | 'red' | 'muted'; color: string }> = {
+  good:    { variant: 'green', color: '#22d3a5' },
+  moderate:{ variant: 'amber', color: '#f59e0b' },
+  poor:    { variant: 'red',   color: '#ff3b4e' },
+  unknown: { variant: 'muted', color: 'rgba(255,255,255,0.25)' },
+};
+
+const QUALITY_LABEL_KEY: Record<string, keyof typeof import('../i18n/translations').pl.airPage> = {
+  good: 'qualityGood',
+  moderate: 'qualityModerate',
+  poor: 'qualityPoor',
+  unknown: 'qualityVeryPoor',
 };
 
 const PM_BARS = [
@@ -53,12 +61,14 @@ function formatUpdated(dateStr: string | null): string | null {
   return d.toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
-function SensorCard({ s, onSelect, onGiosClick }: {
+function SensorCard({ s, onSelect, onGiosClick, t }: {
   s: AirSensor;
   onSelect: (station: AirSensor) => void;
   onGiosClick: () => void;
+  t: ReturnType<typeof useLanguage>['t'];
 }) {
-  const q = QUALITY[s.quality] ?? QUALITY.unknown;
+  const q = QUALITY_BASE[s.quality] ?? QUALITY_BASE.unknown;
+  const qualityLabel = t.airPage[QUALITY_LABEL_KEY[s.quality] ?? 'qualityVeryPoor'] as string;
   const updated = formatUpdated(s.updatedAt);
   const isAirly = s.source === 'airly';
 
@@ -67,7 +77,7 @@ function SensorCard({ s, onSelect, onGiosClick }: {
       accent={q.color}
       onClick={isAirly ? () => onSelect(s) : onGiosClick}
       style={{ cursor: 'pointer' }}
-      title={isAirly ? undefined : 'Dane historyczne niedostępne dla stacji GIOŚ'}
+      title={isAirly ? undefined : t.common.noData}
     >
       <div className={styles.sensorTop}>
         <div>
@@ -78,30 +88,30 @@ function SensorCard({ s, onSelect, onGiosClick }: {
             {isAirly ? 'Airly — kliknij po wykres' : 'GIOŚ'}
           </p>
         </div>
-        <Badge variant={q.variant}>{q.label}</Badge>
+        <Badge variant={q.variant}>{qualityLabel}</Badge>
       </div>
 
       <PmBars s={s} qColor={q.color} />
 
       <div className={styles.whoRow}>
         <div className={styles.whoNormRow}>
-          <span className={styles.whoLabel}>PM2.5 — norma WHO: 15 µg/m³</span>
+          <span className={styles.whoLabel}>PM2.5 — {t.airPage.whoNorm} 15 µg/m³</span>
           {s.pm25 !== null ? (
             <span className={styles.whoStatus} style={{ color: s.pm25 <= 15 ? '#22d3a5' : '#ff3b4e' }}>
-              {s.pm25 <= 15 ? '✓ w normie' : `+${s.pm25 - 15} ponad normę`}
+              {s.pm25 <= 15 ? `✓ ${t.airPage.whoInNorm}` : `+${s.pm25 - 15} ${t.airPage.whoExceed}`}
             </span>
           ) : (
-            <span className={styles.whoLabel}>Brak danych</span>
+            <span className={styles.whoLabel}>{t.common.noData}</span>
           )}
         </div>
         <div className={styles.whoNormRow}>
-          <span className={styles.whoLabel}>PM10 — norma WHO: 45 µg/m³</span>
+          <span className={styles.whoLabel}>PM10 — {t.airPage.whoNorm} 45 µg/m³</span>
           {s.pm10 !== null ? (
             <span className={styles.whoStatus} style={{ color: s.pm10 <= 45 ? '#22d3a5' : '#ff3b4e' }}>
-              {s.pm10 <= 45 ? '✓ w normie' : `+${s.pm10 - 45} ponad normę`}
+              {s.pm10 <= 45 ? `✓ ${t.airPage.whoInNorm}` : `+${s.pm10 - 45} ${t.airPage.whoExceed}`}
             </span>
           ) : (
-            <span className={styles.whoLabel}>Brak danych</span>
+            <span className={styles.whoLabel}>{t.common.noData}</span>
           )}
         </div>
         {updated && <span className={styles.updatedAt}>{updated}</span>}
@@ -115,6 +125,7 @@ export default function AirPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedStation, setSelectedStation] = useState<AirSensor | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const { t } = useLanguage();
 
   // Deep linking: open station modal from ?stationId=xxx
   useEffect(() => {
@@ -167,8 +178,8 @@ export default function AirPage() {
   return (
     <div className={styles.page}>
       <header className={styles.pageHead}>
-        <h2 className={styles.pageTitle}>🌫️ Jakość Powietrza</h2>
-        <p className={styles.pageSub}>Mysłowice i okolice — stacje GIOŚ w promieniu 20 km</p>
+        <h2 className={styles.pageTitle}>🌫️ {t.airPage.title}</h2>
+        <p className={styles.pageSub}>{t.airPage.subtitle}</p>
       </header>
 
       <div className={styles.statsRow}>
@@ -181,7 +192,7 @@ export default function AirPage() {
           ) : (
             <>
               <p className={styles.statNum}>{validPm25.length}</p>
-              <p className={styles.statLbl}>Stacje aktywne</p>
+              <p className={styles.statLbl}>{t.airPage.activeStations}</p>
             </>
           )}
         </Card>
@@ -194,7 +205,7 @@ export default function AirPage() {
           ) : (
             <>
               <p className={styles.statNum}>{avgPm25 ?? '--'}</p>
-              <p className={styles.statLbl}>Średnie PM2.5 µg/m³</p>
+              <p className={styles.statLbl}>{t.airPage.avgPm25}</p>
             </>
           )}
         </Card>
@@ -207,7 +218,7 @@ export default function AirPage() {
           ) : (
             <>
               <p className={styles.statNum}>{avgPm10 ?? '--'}</p>
-              <p className={styles.statLbl}>Średnie PM10 µg/m³</p>
+              <p className={styles.statLbl}>{t.airPage.avgPm10}</p>
             </>
           )}
         </Card>
@@ -220,15 +231,16 @@ export default function AirPage() {
           ))}
         </div>
       )}
-      {error   && <p style={{ color: 'var(--c-red)' }}>Błąd: {error}</p>}
+      {error   && <p style={{ color: 'var(--c-red)' }}>{t.airPage.errorLoading}: {error}</p>}
 
       <div className={styles.grid}>
         {(sensors ?? []).filter(s => s.pm25 !== null || s.pm10 !== null).map(s => (
           <SensorCard
             key={s.id}
             s={s}
+            t={t}
             onSelect={handleSelect}
-            onGiosClick={() => showToast('📊 Dane historyczne niedostępne dla stacji GIOŚ')}
+            onGiosClick={() => showToast(t.airPage.historicalNotAvailable)}
           />
         ))}
       </div>
@@ -243,7 +255,7 @@ export default function AirPage() {
 
       <Card>
         <p style={{ color: 'var(--c-muted)', fontSize: '0.88rem' }}>
-          <strong style={{ color: 'var(--c-text)' }}>Źródła:</strong> GIOŚ (stacje w promieniu 20 km) + Airly (czujniki w promieniu 5 km od centrum Mysłowic). Dane odświeżane co 30 minut. Mysłowice leżą w jednym z najbardziej zanieczyszczonych regionów Polski.
+          <strong style={{ color: 'var(--c-text)' }}>{t.airPage.source}:</strong> {t.airPage.sourceText}
         </p>
       </Card>
     </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { WeatherData } from '../types/api';
 import { useFetch } from '../hooks/useFetch';
 import { OWM_ICONS } from '../constants';
+import { useLanguage } from '../i18n/LanguageContext';
 import Card from '../components/Card';
 import styles from './WeatherPage.module.css';
 
@@ -14,11 +15,15 @@ function useDateTime() {
   return dt;
 }
 
-const DAYS    = ['Niedziela','Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota'];
-const MONTHS  = ['stycznia','lutego','marca','kwietnia','maja','czerwca','lipca','sierpnia','września','października','listopada','grudnia'];
+const DAYS_PL = ['Niedziela','Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota'];
+const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS_PL = ['stycznia','lutego','marca','kwietnia','maja','czerwca','lipca','sierpnia','września','października','listopada','grudnia'];
+const MONTHS_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-function formatDate(d: Date) {
-  return `${DAYS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+function formatDate(d: Date, lang: 'pl' | 'en') {
+  const dayNames = lang === 'pl' ? DAYS_PL : DAYS_EN;
+  const monthNames = lang === 'pl' ? MONTHS_PL : MONTHS_EN;
+  return `${dayNames[d.getDay()]}, ${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
 }
 function formatTime(d: Date) {
   return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
@@ -26,6 +31,7 @@ function formatTime(d: Date) {
 
 export default function WeatherPage() {
   const { data: weather, loading, error } = useFetch<WeatherData>('/api/weather');
+  const { t, lang } = useLanguage();
   const now = useDateTime();
 
   const emoji = weather?.icon ? ((OWM_ICONS as Record<string, string>)[weather.icon] ?? '⛅') : '⛅';
@@ -36,8 +42,8 @@ export default function WeatherPage() {
       <div className={styles.hero}>
         <div className={styles.heroGlow} />
         <div className={styles.heroContent}>
-          <p className={styles.heroLoc}>📍 Mysłowice, Polska</p>
-          <p className={styles.heroDate}>{formatDate(now)} · {formatTime(now)}</p>
+          <p className={styles.heroLoc}>📍 {t.weatherPage.location}</p>
+          <p className={styles.heroDate}>{formatDate(now, lang)} · {formatTime(now)}</p>
           <div className={styles.heroMain}>
             {loading ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
@@ -55,7 +61,7 @@ export default function WeatherPage() {
                     {error ? '--' : `${weather?.temp}°C`}
                   </p>
                   <p className={styles.heroDesc}>
-                    {error ? 'Brak danych' : weather?.description}
+                    {error ? t.weatherPage.noData : weather?.description}
                   </p>
                 </div>
               </>
@@ -75,7 +81,7 @@ export default function WeatherPage() {
           ) : (
             <>
               <p className={styles.detailVal}>💧 {weather?.humidity ?? '--'}%</p>
-              <p className={styles.detailLbl}>Wilgotność</p>
+              <p className={styles.detailLbl}>{t.weatherPage.humidity}</p>
             </>
           )}
         </Card>
@@ -88,7 +94,7 @@ export default function WeatherPage() {
           ) : (
             <>
               <p className={styles.detailVal}>💨 {weather?.windKmh ?? '--'} km/h</p>
-              <p className={styles.detailLbl}>Prędkość wiatru</p>
+              <p className={styles.detailLbl}>{t.weatherPage.wind}</p>
             </>
           )}
         </Card>
@@ -101,7 +107,7 @@ export default function WeatherPage() {
           ) : (
             <>
               <p className={styles.detailVal}>🌡️ {weather?.feelsLike ?? '--'}°C</p>
-              <p className={styles.detailLbl}>Odczuwalna</p>
+              <p className={styles.detailLbl}>{t.weatherPage.feelsLike}</p>
             </>
           )}
         </Card>
@@ -110,14 +116,14 @@ export default function WeatherPage() {
       {error && (
         <Card>
           <p style={{ color: 'var(--c-red)', fontSize: '0.88rem' }}>
-            ⚠️ Błąd pobierania pogody: {error}. Sprawdź klucz API OpenWeatherMap w backendzie.
+            ⚠️ {t.weatherPage.errorFetch}: {error}. {t.weatherPage.errorApiKey}
           </p>
         </Card>
       )}
 
       <Card>
         <p style={{ color: 'var(--c-muted)', fontSize: '0.88rem' }}>
-          <strong style={{ color: 'var(--c-text)' }}>Źródło:</strong> OpenWeatherMap API · Odświeżanie co 10 minut. Klucz API przechowywany po stronie serwera.
+          <strong style={{ color: 'var(--c-text)' }}>{t.common.source}</strong> OpenWeatherMap API · {t.weatherPage.sourceText}
         </p>
       </Card>
     </div>

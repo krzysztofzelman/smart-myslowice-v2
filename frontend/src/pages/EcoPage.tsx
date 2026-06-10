@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { EcoPoint } from '../types/api';
 import { useFetch } from '../hooks/useFetch';
+import { useLanguage } from '../i18n/LanguageContext';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
 import styles from './EcoPage.module.css';
@@ -42,6 +43,7 @@ function EcoCard({ p, type }: { p: EcoPoint; type: string }) {
 
 export default function EcoPage() {
   const { data: points, loading, error } = useFetch<EcoPoint[]>('/api/eco');
+  const { t } = useLanguage();
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
 
   const grouped = points?.reduce((acc, p) => {
@@ -60,8 +62,8 @@ export default function EcoPage() {
   return (
     <div className={styles.page}>
       <header className={styles.pageHead}>
-        <h2 className={styles.pageTitle}>♻️ Ekopunkty</h2>
-        <p className={styles.pageSub}>Mysłowice — PSZOK i inne punkty</p>
+        <h2 className={styles.pageTitle}>♻️ {t.ecoPage.title}</h2>
+        <p className={styles.pageSub}>{t.ecoPage.subtitle}</p>
       </header>
 
       {loading && (
@@ -73,16 +75,23 @@ export default function EcoPage() {
       )}
       {error && (
         <div style={{ padding: '1rem 1.2rem', background: 'rgba(255,59,78,0.1)', border: '1px solid rgba(255,59,78,0.3)', borderRadius: 'var(--radius)', color: 'var(--c-red)', fontSize: '0.9rem', fontWeight: 600, textAlign: 'center' }}>
-          ⚠️ Nie udało się załadować danych. Spróbuj ponownie.
+          ⚠️ {t.ecoPage.errorLoad}
         </div>
       )}
 
       {types.map(type => {
         const isExpanded = expandedCategories[type] ?? false;
+        const categoryTitle: Record<string, string> = {
+          'PSZOK': `🏭 ${t.ecoPage.categoryPszok}`,
+          'Apteki': `💊 ${t.ecoPage.categoryPharmacy}`,
+          'Elektroodpady': `🔌 ${t.ecoPage.categoryEwaste}`,
+          'Tekstylia': `👕 ${t.ecoPage.categoryTextiles}`,
+          'Baterie': `🔋 ${t.ecoPage.categoryBatteries}`,
+        };
         return (
           <div key={type} className={styles.category}>
             <h3 className={styles.categoryTitle}>
-              {type === 'PSZOK' ? '🏭 Punkt Selektywnej Zbiórki Odpadów' : type === 'Organizacja' ? '🤝 Organizacje' : `📦 ${type}`}
+              {categoryTitle[type] ?? `📦 ${type}`}
             </h3>
             <div className={styles.list}>
               {grouped[type].slice(0, PREVIEW).map(p => <EcoCard key={p.id} p={p} type={type} />)}
@@ -101,7 +110,7 @@ export default function EcoPage() {
                   className={styles.toggleBtn}
                   onClick={() => toggleCategory(type)}
                 >
-                  {isExpanded ? '▲ Zwiń' : `▼ Pokaż wszystkie (${grouped[type].length})`}
+                  {isExpanded ? t.ecoPage.collapse : `▼ ${t.ecoPage.showAll} (${grouped[type].length})`}
                 </button>
               </>
             )}
@@ -111,10 +120,7 @@ export default function EcoPage() {
 
       <Card>
         <p style={{ color: 'var(--c-muted)', fontSize: '0.88rem' }}>
-          💡 <strong style={{ color: 'var(--c-text)' }}>PSZOK</strong> przyjmuje odpady segregowane. Przed wizytą sprawdź harmonogram na stronie Urzędu Miasta.
-        </p>
-        <p style={{ color: 'var(--c-muted)', fontSize: '0.88rem', marginTop: '0.6rem' }}>
-          💊 <strong style={{ color: 'var(--c-text)' }}>Przeterminowane leki</strong> (tabletki, syropy, maści) oraz <strong style={{ color: 'var(--c-text)' }}>termometry rtęciowe</strong> można również oddać w dowolnej aptece na terenie Mysłowic — nie tylko w PSZOK.
+          {t.ecoPage.info}
         </p>
       </Card>
     </div>

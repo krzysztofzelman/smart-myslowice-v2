@@ -45,8 +45,10 @@ export function useFetch<T = unknown>(url: string): UseFetchResult<T> {
             setError('Timeout — serwer nie odpowiada');
           } else if (e.message !== SERVER_ERROR_MSG) {
             console.warn(`[useFetch] ${url} — ${e.message}`);
+            setError(e.message);
+          } else {
+            setError(e.message);
           }
-          setError(e.message);
           setLoading(false);
         }
       });

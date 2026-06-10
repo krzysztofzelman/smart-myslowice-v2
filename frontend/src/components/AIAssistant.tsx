@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAIAssistant } from '../hooks/useAIAssistant';
+import { useLanguage } from '../i18n/LanguageContext';
 import styles from './AIAssistant.module.css';
 
 interface Message {
@@ -20,12 +21,21 @@ export default function AIAssistant() {
     },
   ]);
   const { sendQuery, loading, error } = useAIAssistant();
+  const { t, lang } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const pendingQueryRef = useRef(false);
   const prevErrorRef = useRef<string | null>(null);
+
+  // Ustaw początkową wiadomość po zmianie języka
+  useEffect(() => {
+    if (messages.length === 1 && messages[0].role === 'assistant') {
+      const greeting = t.aiAssistant.greeting;
+      setMessages([{ role: 'assistant', content: greeting }]);
+    }
+  }, [lang]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-scroll do najnowszej wiadomości
   useEffect(() => {
@@ -107,20 +117,20 @@ export default function AIAssistant() {
       <button
         className={`${styles.toggle} ${open ? styles.toggleActive : ''}`}
         onClick={() => setOpen((v) => !v)}
-        aria-label={open ? 'Zamknij asystenta' : 'Otwórz asystenta'}
-        title={open ? 'Zamknij' : 'Asystent'}
+        aria-label={open ? t.aiAssistant.close : t.aiAssistant.open}
+        title={open ? t.aiAssistant.close : t.aiAssistant.title}
       >
         <span className={styles.toggleIcon}>{open ? '✕' : '🤖'}</span>
-        {!open && <span className={styles.toggleLabel}>Asystent</span>}
+        {!open && <span className={styles.toggleLabel}>{t.aiAssistant.title}</span>}
       </button>
 
       {/* Panel czatu */}
       {open && (
-        <div className={styles.panel} role="dialog" aria-label="Asystent miejski Smart Mysłowice">
+        <div className={styles.panel} role="dialog" aria-label={`${t.aiAssistant.cityAssistant} Smart Mysłowice`}>
           {/* Nagłówek */}
           <div className={styles.header}>
             <span className={styles.headerIcon}>🤖</span>
-            <span className={styles.headerTitle}>Asystent miejski</span>
+            <span className={styles.headerTitle}>{t.aiAssistant.cityAssistant}</span>
           </div>
 
           {/* Lista wiadomości */}
@@ -137,9 +147,9 @@ export default function AIAssistant() {
                   <button
                     className={styles.suggestedLink}
                     onClick={() => handleSuggestionClick(msg.suggestedPath!)}
-                    aria-label={`Przejdź do strony: ${msg.suggestedPath}`}
+                    aria-label={`${t.aiAssistant.goToPage}: ${msg.suggestedPath}`}
                   >
-                    🔗 Zobacz szczegóły
+                    🔗 {t.aiAssistant.showDetails}
                   </button>
                 )}
               </div>
@@ -164,16 +174,16 @@ export default function AIAssistant() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Zadaj pytanie o miasto…"
+              placeholder={t.aiAssistant.placeholder}
               maxLength={500}
               disabled={loading}
-              aria-label="Zapytaj asystenta"
+              aria-label={t.aiAssistant.placeholder}
             />
             <button
               className={styles.sendBtn}
               onClick={handleSubmit}
               disabled={!input.trim() || loading}
-              aria-label="Wyślij zapytanie"
+              aria-label={t.aiAssistant.send}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="22" y1="2" x2="11" y2="13" />

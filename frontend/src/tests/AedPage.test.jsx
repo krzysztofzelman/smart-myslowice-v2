@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
+import { LanguageProvider } from '../i18n/LanguageContext';
 
 // Mock Leaflet
 vi.mock('leaflet', () => {
@@ -81,9 +82,11 @@ describe('AedPage', () => {
 
   it('should render the component', async () => {
     render(
-      <MemoryRouter>
-        <AedPage />
-      </MemoryRouter>
+      <LanguageProvider defaultLang="pl">
+        <MemoryRouter>
+          <AedPage />
+        </MemoryRouter>
+      </LanguageProvider>
     );
     expect(screen.getByText(/defibrylator/i)).toBeInTheDocument();
   });

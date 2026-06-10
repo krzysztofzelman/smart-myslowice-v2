@@ -7,25 +7,21 @@ export type WaterRiskStatus = 'safe' | 'warning' | 'danger' | 'unknown';
 
 export const WATER_STATUS: Record<
   string,
-  { label: string; variant: 'green' | 'amber' | 'red' | 'muted'; color: string }
+  { variant: 'green' | 'amber' | 'red' | 'muted'; color: string }
 > = {
   safe: {
-    label: 'Bezpieczny',
     variant: 'green',
     color: '#22d3a5',
   },
   warning: {
-    label: 'Ostrzeżenie',
     variant: 'amber',
     color: '#f59e0b',
   },
   danger: {
-    label: 'Niebezpieczny',
     variant: 'red',
     color: '#ff3b4e',
   },
   unknown: {
-    label: 'Brak danych',
     variant: 'muted',
     color: 'rgba(255,255,255,0.25)',
   },

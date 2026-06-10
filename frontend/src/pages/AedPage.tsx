@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import type { AedLocation } from '../types/api';
 import { useFetch } from '../hooks/useFetch';
 import { useThemeContext } from '../ThemeContext';
+import { useLanguage } from '../i18n/LanguageContext';
 import { haversineKm } from '../utils/geo';
 import CityBorder from '../components/CityBorder';
 import Card from '../components/Card';
@@ -46,6 +47,7 @@ export default function AedPage() {
   const [geoError, setGeoError] = useState<string | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
   const { theme } = useThemeContext();
+  const { t } = useLanguage();
 
   const tileUrl = theme === 'dark'
     ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
@@ -57,7 +59,7 @@ export default function AedPage() {
 
   function handleFindNearest() {
     if (!navigator.geolocation) {
-      setGeoError('Geolokalizacja nie jest wspierana przez Twoją przeglądarkę.');
+      setGeoError(t.aedPage.geoErrorGeneric);
       return;
     }
     setGeoLoading(true);
@@ -81,16 +83,16 @@ export default function AedPage() {
         setGeoLoading(false);
         switch (err.code) {
           case err.PERMISSION_DENIED:
-            setGeoError('Nie udzielono dostępu do lokalizacji. Aby znaleźć najbliższy AED, włącz lokalizację w ustawieniach przeglądarki.');
+            setGeoError(t.aedPage.geoErrorDenied);
             break;
           case err.POSITION_UNAVAILABLE:
-            setGeoError('Nie udało się ustalić Twojej lokalizacji. Spróbuj ponownie.');
+            setGeoError(t.aedPage.geoErrorUnavailable);
             break;
           case err.TIMEOUT:
-            setGeoError('Upłynął czas oczekiwania na lokalizację. Spróbuj ponownie.');
+            setGeoError(t.aedPage.geoErrorTimeout);
             break;
           default:
-            setGeoError('Nie udało się pobrać lokalizacji. Spróbuj ponownie.');
+            setGeoError(t.aedPage.geoErrorDefault);
         }
       },
       { enableHighAccuracy: true, timeout: 10000 }
@@ -118,11 +120,11 @@ export default function AedPage() {
         <div className={styles.alertLeft}>
           <span className={styles.alertIcon}>⚠️</span>
           <div>
-            <p className={styles.alertTitle}>Nagłe zatrzymanie krążenia?</p>
-            <p className={styles.alertSub}>Zadzwoń na pogotowie, znajdź defibrylator, zacznij RKO</p>
+            <p className={styles.alertTitle}>{t.aedPage.alertTitle}</p>
+            <p className={styles.alertSub}>{t.aedPage.alertSub}</p>
           </div>
         </div>
-        <a href="tel:112" className={styles.alertBtn}>Zadzwoń 112</a>
+        <a href="tel:112" className={styles.alertBtn}>{t.aedPage.alertBtn}</a>
       </div>
 
       <div className={styles.statsRow}>
@@ -135,7 +137,7 @@ export default function AedPage() {
           ) : (
             <>
               <p className={styles.statNum}>{locations?.length}</p>
-              <p className={styles.statLbl}>Defibrylatory AED</p>
+              <p className={styles.statLbl}>{t.aedPage.aedLabel}</p>
             </>
           )}
         </Card>
@@ -148,23 +150,23 @@ export default function AedPage() {
           ) : (
             <>
               <p className={styles.statNum}>{locations?.filter(l => is247(l.access)).length}</p>
-              <p className={styles.statLbl}>Dostępne 24/7</p>
+              <p className={styles.statLbl}>{t.aedPage.available247}</p>
             </>
           )}
         </Card>
         <Card accent="var(--c-blue)">
           <p className={styles.statNum}>100%</p>
-          <p className={styles.statLbl}>Publicznie dostępne</p>
+          <p className={styles.statLbl}>{t.aedPage.publiclyAvailable}</p>
         </Card>
       </div>
 
       <button
         className={styles.geoBtn}
-        aria-label="Znajdź najbliższy defibrylator"
+        aria-label={t.aedPage.geoBtnText}
         onClick={handleFindNearest}
         disabled={geoLoading || loading}
       >
-        {geoLoading ? '⏳ Szukanie…' : '📍 Znajdź najbliższy AED'}
+        {geoLoading ? t.aedPage.geoBtnLoading : t.aedPage.geoBtnText}
       </button>
 
       {geoError && (
@@ -175,7 +177,7 @@ export default function AedPage() {
 
       {error && (
         <div className={styles.errorBanner}>
-          ⚠️ Nie udało się załadować danych. Spróbuj ponownie.
+          ⚠️ {t.aedPage.dataErrorMsg}
         </div>
       )}
 
@@ -209,7 +211,7 @@ export default function AedPage() {
                       rel="noreferrer"
                       style={{ display: 'inline-block', padding: '0.5rem 1rem', background: '#3b82f6', color: '#fff', borderRadius: 8, fontSize: '0.8rem', textDecoration: 'none', fontWeight: 600 }}
                     >
-                      Nawiguj →
+                      {t.aedPage.navigateBtn}
                     </a>
                   </div>
                 </Popup>
@@ -220,7 +222,7 @@ export default function AedPage() {
       )}
 
       <div className={styles.listWrap}>
-        <h2 className={styles.listTitle}>Wszystkie lokalizacje</h2>
+        <h2 className={styles.listTitle}>{t.aedPage.allLocations}</h2>
         {loading && (
           <div className={styles.list}>
             {[1,2,3,4,5].map(i => (
@@ -239,7 +241,7 @@ export default function AedPage() {
             <button
               key={loc.id}
               className={styles.listItem}
-              aria-label={`Nawiguj do ${loc.name}`}
+              aria-label={`${t.aedPage.navigateTo} ${loc.name}`}
               onClick={() => setFlyTo([loc.coordinates.lat, loc.coordinates.lng])}
             >
               <div className={styles.listMain}>
@@ -288,12 +290,12 @@ export default function AedPage() {
             </div>
             <button
               className={styles.toggleBtn}
-              aria-label={expanded ? 'Zwiń listę' : 'Rozwiń listę'}
+              aria-label={expanded ? t.aedPage.collapseAria : t.aedPage.expandAria}
               onClick={() => setExpanded(e => !e)}
             >
               {expanded
-                ? '▲ Zwiń'
-                : `▼ Pokaż wszystkie (${sortedLocations.length})`}
+                ? t.aedPage.collapseList
+                : `${t.aedPage.showAll} (${sortedLocations.length})`}
             </button>
           </>
         )}

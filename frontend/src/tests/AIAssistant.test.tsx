@@ -1,13 +1,16 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
+import { LanguageProvider } from '../i18n/LanguageContext';
 import AIAssistant from '../components/AIAssistant';
 
 const renderAssistant = () =>
   render(
-    <MemoryRouter initialEntries={['/']}>
-      <AIAssistant />
-    </MemoryRouter>,
+    <LanguageProvider defaultLang="pl">
+      <MemoryRouter initialEntries={['/']}>
+        <AIAssistant />
+      </MemoryRouter>
+    </LanguageProvider>,
   );
 
 beforeEach(() => {
@@ -45,7 +48,7 @@ describe('AIAssistant', () => {
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByLabelText('Zamknij asystenta'));
+    fireEvent.click(screen.getByLabelText('Zamknij'));
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
@@ -66,7 +69,7 @@ describe('AIAssistant', () => {
     renderAssistant();
     fireEvent.click(screen.getByLabelText('Otwórz asystenta'));
 
-    const input = screen.getByLabelText('Zapytaj asystenta');
+    const input = screen.getByLabelText('Zadaj pytanie o miasto…');
     fireEvent.change(input, { target: { value: 'jaka jest jakość powietrza?' } });
     fireEvent.click(screen.getByLabelText('Wyślij zapytanie'));
 
@@ -82,7 +85,7 @@ describe('AIAssistant', () => {
     renderAssistant();
     fireEvent.click(screen.getByLabelText('Otwórz asystenta'));
 
-    const input = screen.getByLabelText('Zapytaj asystenta');
+    const input = screen.getByLabelText('Zadaj pytanie o miasto…');
     fireEvent.change(input, { target: { value: 'test query' } });
     fireEvent.click(screen.getByLabelText('Wyślij zapytanie'));
 
@@ -99,7 +102,7 @@ describe('AIAssistant', () => {
     renderAssistant();
     fireEvent.click(screen.getByLabelText('Otwórz asystenta'));
 
-    const input = screen.getByLabelText('Zapytaj asystenta');
+    const input = screen.getByLabelText('Zadaj pytanie o miasto…');
     fireEvent.change(input, { target: { value: 'test query' } });
     fireEvent.click(screen.getByLabelText('Wyślij zapytanie'));
 
@@ -120,7 +123,7 @@ describe('AIAssistant', () => {
     renderAssistant();
     fireEvent.click(screen.getByLabelText('Otwórz asystenta'));
 
-    const input = screen.getByLabelText('Zapytaj asystenta');
+    const input = screen.getByLabelText('Zadaj pytanie o miasto…');
     expect(input).toBeInTheDocument();
     expect(input).toHaveAttribute('maxLength', '500');
   });
@@ -140,7 +143,7 @@ describe('AIAssistant', () => {
     renderAssistant();
     fireEvent.click(screen.getByLabelText('Otwórz asystenta'));
 
-    const input = screen.getByLabelText('Zapytaj asystenta');
+    const input = screen.getByLabelText('Zadaj pytanie o miasto…');
     fireEvent.change(input, { target: { value: 'powietrze' } });
     fireEvent.click(screen.getByLabelText('Wyślij zapytanie'));
 

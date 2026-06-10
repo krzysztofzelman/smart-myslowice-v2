@@ -74,6 +74,27 @@
   border-color: var(--c-muted);
 }
 
+.langBtn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.9rem;
+  border-radius: 99px;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  color: var(--c-blue, #3b82f6);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: 'Space Grotesk', sans-serif;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+  letter-spacing: 0.03em;
+  margin-left: auto;
+}
+.langBtn:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: var(--c-blue, #3b82f6);
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.4; }

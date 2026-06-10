@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import { useLanguage } from '../i18n/LanguageContext';
 import styles from './Nav.module.css';
 
 interface Tab {
@@ -12,8 +13,9 @@ interface NavProps {
 }
 
 export default function Nav({ tabs }: NavProps) {
+  const { t } = useLanguage();
   return (
-    <nav className={styles.nav} role="navigation" aria-label="Główna nawigacja">
+    <nav className={styles.nav} role="navigation" aria-label={t.nav.ariaLabel}>
       <div className={styles.inner}>
         {tabs.map((tab) => (
           <NavLink
