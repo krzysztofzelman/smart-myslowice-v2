@@ -285,7 +285,7 @@ export const en: typeof pl = {
     close: 'Close',
     error: 'Error:',
     noData: 'No data',
-    refresh: 'Try again',
+    refresh: 'Retry',
     home: 'Home',
     showList: 'Show list',
     hideList: 'Hide list',
@@ -308,7 +308,7 @@ export const en: typeof pl = {
     themeDusk: 'Dusk',
     themeNight: 'Night',
     title: 'Smart Mysłowice',
-    subtitle: 'Urban Data Platform · Silesia',
+    subtitle: 'Urban Data Platform · Upper Silesia',
     loadingWeather: 'Loading weather…',
     languageSwitch: 'Polski',
     languageSwitchTitle: 'Przełącz na polski',
@@ -330,13 +330,13 @@ export const en: typeof pl = {
 
   // --- AI Assistant ---
   aiAssistant: {
-    greeting: 'Hi! I\'m the Smart Mysłowice assistant. How can I help you?',
+    greeting: 'Hi! I\'m the Smart Mysłowice assistant. How can I help?',
     title: 'Assistant',
     close: 'Close',
     open: 'Open assistant',
     cityAssistant: 'City assistant',
     placeholder: 'Ask about the city…',
-    send: 'Send query',
+    send: 'Send',
     showDetails: 'Show details',
     goToPage: 'Go to page',
   },
@@ -365,7 +365,7 @@ export const en: typeof pl = {
     qualityVeryGood: 'Very good',
     qualityGood: 'Good',
     qualityModerate: 'Moderate',
-    qualitySufficient: 'Sufficient',
+    qualitySufficient: 'Acceptable',
     qualityPoor: 'Poor',
     qualityVeryPoor: 'Very poor',
     cagiLabel: 'CAQI',
@@ -375,24 +375,24 @@ export const en: typeof pl = {
     stationRef: 'Reference station',
     dataReanalysis: 'Reanalysis data',
     source: 'Source: GIOS / OpenAQ',
-    errorLoading: 'Error loading air quality data',
+    errorLoading: 'Failed to load air quality data',
     noStation: 'No monitoring stations found in Mysłowice',
     toastUpdate: 'Data is updated every hour',
     toastSource: 'Data from Chief Inspectorate of Environmental Protection',
-    whoInNorm: 'within norm',
-    whoExceed: 'above norm',
+    whoInNorm: 'within limits',
+    whoExceed: 'exceeds limits',
     activeStations: 'Active stations',
     avgPm25: 'Avg PM2.5 µg/m³',
     avgPm10: 'Avg PM10 µg/m³',
-    historicalNotAvailable: '📊 Historical data not available for GIOS stations',
+    historicalNotAvailable: '📊 Historical data unavailable for GIOS stations',
     sourceText: 'Source: GIOS (stations within 20 km radius) + Airly (sensors within 5 km of Mysłowice city center). Data refreshed every 30 minutes. Mysłowice is located in one of the most polluted regions of Poland.',
   },
 
   // --- AedPage ---
   aedPage: {
-    title: 'AED Defibrillators',
-    subtitle: 'AED defibrillator network in Mysłowice',
-    alert: '⚠️ In emergencies call 112',
+    title: 'Defibrillators (AED)',
+    subtitle: 'AED network in Mysłowice',
+    alert: '⚠️ In an emergency, call 112',
     call112: 'Call 112',
     totalAed: 'Total AED',
     withinRange: 'Within range',
@@ -422,7 +422,7 @@ export const en: typeof pl = {
     showAll: '▼ Show all',
     expandAria: 'Expand list',
     collapseAria: 'Collapse list',
-    aedLabel: 'AED Defibrillators',
+    aedLabel: 'Defibrillators (AED)',
   },
 
   // --- WeatherPage ---
@@ -437,16 +437,16 @@ export const en: typeof pl = {
     uvIndex: 'UV Index',
     feelsLike: 'Feels like',
     source: 'Source: IMGW / Open-Meteo',
-    errorFetch: 'Weather fetch error',
+    errorFetch: 'Failed to load weather data',
     errorApiKey: 'Check the OpenWeatherMap API key in the backend.',
     noData: 'No data',
-    sourceText: 'Refreshing every 10 minutes. API key stored server-side.',
+    sourceText: 'Refreshed every 10 minutes. API key stored server-side.',
   },
 
   // --- ToiletsPage ---
   toiletsPage: {
     title: 'Public Toilets',
-    subtitle: 'Public toilet map in Mysłowice',
+    subtitle: 'Public toilets in Mysłowice',
     error: 'Could not load toilet data.',
     tip: '💡 Tip: Click a marker on the map to see details.',
     paid: 'Paid',
@@ -472,7 +472,7 @@ export const en: typeof pl = {
 
   // --- WaterPage ---
   waterPage: {
-    title: 'Water Monitoring',
+    title: 'Water Levels',
     subtitle: 'River and stream levels in Mysłowice',
     level: 'Level:',
     status: 'Status:',
