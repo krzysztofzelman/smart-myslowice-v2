@@ -5,6 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#12151e" />
 
+    <!-- Dynamic lang + SEO — inline script runs before React loads -->
+    <script>
+      (function () {
+        var lang = localStorage.getItem('smart-myslowice-lang');
+        if (lang !== 'pl' && lang !== 'en') {
+          lang = navigator.language.startsWith('pl') ? 'pl' : 'en';
+        }
+        document.documentElement.lang = lang;
+
+        // Update meta tags for SEO
+        var isEn = lang === 'en';
+        var desc = isEn
+          ? 'Smart Mysłowice – intelligent city portal. Check weather, air quality, public transport and AED locations in Mysłowice.'
+          : 'Smart Mysłowice – inteligentny portal miejski. Sprawdź pogodę, jakość powietrza, komunikację miejską i lokalizacje AED w Mysłowicach.';
+        var title = isEn ? 'Smart Mysłowice – intelligent city portal' : 'Smart Mysłowice – inteligentny portal miejski';
+        var ogDesc = isEn
+          ? 'Weather, air quality, public transport and AED in one place.'
+          : 'Pogoda, jakość powietrza, komunikacja miejska i AED w jednym miejscu.';
+
+        document.querySelector('meta[name="description"]')?.setAttribute('content', desc);
+        document.querySelector('meta[property="og:title"]')?.setAttribute('content', title);
+        document.querySelector('meta[property="og:description"]')?.setAttribute('content', ogDesc);
+        document.querySelector('meta[property="og:locale"]')?.setAttribute('content', isEn ? 'en_US' : 'pl_PL');
+        document.querySelector('meta[name="twitter:title"]')?.setAttribute('content', title);
+        document.querySelector('meta[name="twitter:description"]')?.setAttribute('content', ogDesc);
+        document.title = 'Smart Mysłowice';
+      })();
+    </script>
+
     <!-- Primary SEO -->
     <meta name="description" content="Smart Mysłowice – inteligentny portal miejski. Sprawdź pogodę, jakość powietrza, komunikację miejską i lokalizacje AED w Mysłowicach." />
     <meta name="keywords" content="Mysłowice, pogoda Mysłowice, jakość powietrza Mysłowice, komunikacja miejska Mysłowice, AED Mysłowice, smart city" />
@@ -24,6 +53,11 @@
     <meta name="twitter:title" content="Smart Mysłowice – inteligentny portal miejski" />
     <meta name="twitter:description" content="Pogoda, jakość powietrza, komunikacja miejska i AED w jednym miejscu." />
     <meta name="twitter:image" content="https://smart-myslowice.pl/og-image.png" />
+
+    <!-- hreflang for SEO -->
+    <link rel="alternate" href="https://smart-myslowice.pl/" hreflang="pl" />
+    <link rel="alternate" href="https://smart-myslowice.pl/" hreflang="en" />
+    <link rel="alternate" href="https://smart-myslowice.pl/" hreflang="x-default" />
 
     <!-- Robots -->
     <meta name="robots" content="index, follow" />

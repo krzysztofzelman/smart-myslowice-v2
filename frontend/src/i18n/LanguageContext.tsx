@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { type Lang, type Translations, pl, en } from './translations';
 
 interface LanguageContextValue {
@@ -17,8 +17,41 @@ function getInitialLang(): Lang {
   return navigator.language.startsWith('pl') ? 'pl' : 'en';
 }
 
+function updateDocumentLang(lang: Lang) {
+  const isEn = lang === 'en';
+  document.documentElement.lang = lang;
+  document.querySelector('meta[name="description"]')?.setAttribute(
+    'content',
+    isEn
+      ? 'Smart Mysłowice – intelligent city portal. Check weather, air quality, public transport and AED locations in Mysłowice.'
+      : 'Smart Mysłowice – inteligentny portal miejski. Sprawdź pogodę, jakość powietrza, komunikację miejską i lokalizacje AED w Mysłowicach.',
+  );
+  document.querySelector('meta[property="og:title"]')?.setAttribute(
+    'content',
+    isEn ? 'Smart Mysłowice – intelligent city portal' : 'Smart Mysłowice – inteligentny portal miejski',
+  );
+  document.querySelector('meta[property="og:description"]')?.setAttribute(
+    'content',
+    isEn ? 'Weather, air quality, public transport and AED in one place.' : 'Pogoda, jakość powietrza, komunikacja miejska i AED w jednym miejscu.',
+  );
+  document.querySelector('meta[property="og:locale"]')?.setAttribute('content', isEn ? 'en_US' : 'pl_PL');
+  document.querySelector('meta[name="twitter:title"]')?.setAttribute(
+    'content',
+    isEn ? 'Smart Mysłowice – intelligent city portal' : 'Smart Mysłowice – inteligentny portal miejski',
+  );
+  document.querySelector('meta[name="twitter:description"]')?.setAttribute(
+    'content',
+    isEn ? 'Weather, air quality, public transport and AED in one place.' : 'Pogoda, jakość powietrza, komunikacja miejska i AED w jednym miejscu.',
+  );
+}
+
 export function LanguageProvider({ children, defaultLang }: { children: ReactNode; defaultLang?: Lang }) {
   const [lang, setLangState] = useState<Lang>(defaultLang ?? getInitialLang);
+
+  // Sync HTML lang + meta tags whenever language changes
+  useEffect(() => {
+    updateDocumentLang(lang);
+  }, [lang]);
 
   const setLang = (next: Lang) => {
     setLangState(next);

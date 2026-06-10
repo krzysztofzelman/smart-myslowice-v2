@@ -56,10 +56,12 @@ export default tseslint.config(
       'dist/',
       'api/',
       'node_modules/',
-      '*.config.js',
+      '*.config.*',
       '.qwen/',
       'public/',
       'scripts/',
+      'server.js',
+      'dev-api-server.mjs',
     ],
   },
 );

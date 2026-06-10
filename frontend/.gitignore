@@ -1,0 +1,26 @@
+# Zależności
+node_modules/
+
+# Build
+dist/
+.vite/
+
+# Środowisko — NIGDY nie wrzucaj kluczy API!
+.env
+.env.local
+.env.*.local
+
+# Logi
+*.log
+npm-debug.log*
+logs/
+
+# System
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user

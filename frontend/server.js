@@ -17,6 +17,8 @@
 
 import 'dotenv/config';
 import express from 'express';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import { readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -33,8 +35,42 @@ if (!process.env.API_DEV_PORT) {
 
 /* ── Middleware ────────────────────────────────────────────────────────── */
 
+// Nagłówki bezpieczeństwa (CSP, X-Frame-Options, X-Content-Type-Options itd.)
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://unpkg.com'],
+      imgSrc: ["'self'", 'data:', 'https://*.tile.openstreetmap.org', 'https://nominatim.openstreetmap.org'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+      connectSrc: ["'self'", 'https://nominatim.openstreetmap.org', 'https://api.openweathermap.org', 'https://airapi.airly.eu'],
+      frameSrc: ["'none'"],
+      objectSrc: ["'none'"],
+    },
+  },
+}));
+
+// Rate limiting — API: max 60 requests/min, statyki: 200/min
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests — spróbuj ponownie za minutę' },
+});
+app.use('/api', apiLimiter);
+
+const generalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(generalLimiter);
+
 // Parsowanie JSON dla POST (potrzebne dla /api/ai-assistant)
-app.use(express.json());
+app.use(express.json({ limit: '10kb' }));
 
 // Logowanie żądań
 app.use((req, res, next) => {
